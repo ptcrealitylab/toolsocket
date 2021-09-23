@@ -1,0 +1,33 @@
+{
+  "name": "toolsocket",
+  "version": "1.0.0",
+  "description": "A websocket server for nodejs and client for nodejs and browser. Supports Req/Res, Send without response and in future pub/sub.",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ptcrealitylab/toolsocket.git"
+  },
+  "keywords": [
+    "websocket",
+    "client",
+    "server",
+    "browser",
+    "node"
+  ],
+  "author": "Valentin Heun",
+  "license": "MPL-2.0",
+  "bugs": {
+    "url": "https://github.com/ptcrealitylab/toolsocket/issues"
+  },
+  "homepage": "https://github.com/ptcrealitylab/toolsocket#readme",
+  "dependencies": {
+    "ip": "^1.1.5",
+    "ws": "^8.2.2"
+  },
+  "devDependencies": {
+    "jest": "^27.2.1"
+  }
+}
