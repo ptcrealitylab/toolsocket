@@ -1,6 +1,26 @@
-## toolsocket
-Toolsocket is a WebSocket server for nodejs and a client for nodejs and browsers. It supports Req/Res, messages without acknowledgment, and in future Pub/Sub via a single Websocket.
-The API for browser and nodejs is identical.
+## ToolSocket
+ToolSocket is a WebSocket server (nodejs only) and client for nodejs and browsers and a minimal but strict JSON Schema validator. The goal is to simplify real-time data communication.
+
++ It supports Req/Res, messages without acknowledgment, and in future Pub/Sub via a single Websocket.
++ The API for browser and nodejs is identical.
++ Build-in data package validator uses JSON schema.
++ The minified library file size is only 9 kb.
++ The communication protocol is standard conform WebSocket with a JSON based message package:
+
+````javascript
+// code snipets from line 51
+this.DataPackage = function (origin, network, method, route, body, id = null) {
+    this.i = id; // Package id for response otherwise null
+    this.o = origin; // Package origin [client, web, proxy]
+    this.n = network; // NetworkID
+    this.m = method; // Method such as post, get, action, ...
+    this.r = route; // Package route. Example "/boston/seaport/ptc"
+    this.b = body; // Message body (object, array, number, string)
+    this.s = null // Secret used to manage write access.
+};
+````
+
+
 
 ### install
 add the following to your package.json
