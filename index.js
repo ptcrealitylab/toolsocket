@@ -62,7 +62,7 @@ class MainToolboxSocket extends ToolboxEventEmitter {
             "items": {
                 "properties": {
                     "i": {"type": ["integer", "null"], "minimum": 0, "maximum": Number.MAX_SAFE_INTEGER},
-                    "o": {"type": "string", "minLength": 1, "maxLength": 10, "enum": ["proxy", "client", "edge", "web"]},
+                    "o": {"type": "string", "minLength": 1, "maxLength": 10, "enum": ["server", "client", "web"]},
                     "n": {"type": "string", "minLength": 1, "maxLength": 25, "pattern": "^[A-Za-z0-9_]*$"},
                     "m": {"type": "string", "minLength": 1, "maxLength": 10, "enum": ["beat", "action", "ping", "get", "post", "put", "patch", "delete", "new", "unsub", "sub", "pub", "message", "res"]},
                     "r": {"type": "string", "minLength": 0, "maxLength": 2000, "pattern": "^[A-Za-z0-9_/?:&+.%=-]*$"},
@@ -314,8 +314,9 @@ class ToolSocket extends MainToolboxSocket {
         this.connect(this.url, this.networkID, this.origin);
     }
     static Server = class Server extends ToolboxEventEmitter {
-        constructor(param) {
+        constructor(param, origin) {
             super();
+            if(origin) this.origin = origin; else this.origin = "server";
             if (typeof window !== 'undefined') return;
             let that = this;
             console.log('Server init')
@@ -330,7 +331,7 @@ class ToolSocket extends MainToolboxSocket {
                         this.envNode = true;
                         this.isServer = true;
                         this.readyState = this.OPEN;
-                        this.origin = 'proxy';
+                        this.origin = that.origin;
                         this.attachEvents();
                     }
                 }

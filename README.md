@@ -11,8 +11,8 @@ ToolSocket is a WebSocket server (nodejs only) and client for nodejs and browser
 // code snipets from line 51
 this.DataPackage = function (origin, network, method, route, body, id = null) {
     this.i = id; // Package id for response otherwise null
-    this.o = origin; // Package origin [client, web, proxy]
-    this.n = network; // NetworkID
+    this.o = origin; // Package origin [client, web, server]
+    this.n = network; // NetworkID (think about it as room)
     this.m = method; // Method such as post, get, action, ...
     this.r = route; // Package route. Example "/boston/seaport/ptc"
     this.b = body; // Message body (object, array, number, string)
