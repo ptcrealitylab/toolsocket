@@ -1,4 +1,4 @@
-const ToolSocket = require('./index.min.js');
+const ToolSocket = require('./index.js');
 let client = new ToolSocket("ws://localhost:1234", "xkjhasdflk", "web");
 var server = new ToolSocket.Server({port: 1234})
 
