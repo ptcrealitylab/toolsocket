@@ -4,7 +4,7 @@ ToolSocket is a WebSocket server (nodejs only) and client for nodejs and browser
 + It supports Req/Res, messages without acknowledgment, and in future Pub/Sub via a single Websocket.
 + The API for browser and nodejs is identical.
 + Build-in data package validator uses JSON schema.
-+ The minified library file size is only 9 kb.
++ The minified library file size is only 7 kb.
 + The communication protocol is standard conform WebSocket with a JSON based message package:
 
 ````javascript
