@@ -1,11 +1,13 @@
-# toolsocket
+## toolsocket
+Toolsocket is a WebSocket server for nodejs and a client for nodejs and browsers. It supports Req/Res, messages without acknowledgment, and in future Pub/Sub via a single Websocket.
+The API for browser and nodejs is identical.
 
 ### install
 add the following to your package.json
 ```json
- "dependencies": {
-    "toolsocket": "ptcrealitylab/toolsocket#main"
-  }
+"dependencies":{
+  "toolsocket": "ptcrealitylab/toolsocket#main"
+}
   ```
 `npm install`
 
