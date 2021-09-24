@@ -44,7 +44,7 @@ webSocketServer.on('connection', function connection(socket) {
 
 ```javascript
 const ToolSocket = require("toolsocket");
-socket = new ToolSocket('ws://localhost:12345', 'networkID', 'client');
+let socket = new ToolSocket('ws://localhost:12345', 'networkID', 'client');
 ```
 
 ### Initialize Client in Web-Browser
@@ -52,7 +52,7 @@ socket = new ToolSocket('ws://localhost:12345', 'networkID', 'client');
 ```html
 <script src="node_modules/toolsocket/index.js"></script>
 <script>
-    socket = new ToolSocket('ws://localhost:12345', 'networkID', 'web');
+    let socket = new ToolSocket('ws://localhost:12345', 'networkID', 'web');
 </script>
 ```
 
