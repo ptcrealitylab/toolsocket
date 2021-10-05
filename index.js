@@ -161,7 +161,7 @@ class MainToolboxSocket extends ToolboxEventEmitter {
             if (obj.m === 'ping') {
                 that.send(new that.DataPackage(that.origin, obj.n, 'res', obj.r, 'pong', obj.i));
                 if (that.networkID !== obj.n) {
-                    this.emit('network', obj.n, that.networkID);
+                    this.emit('network', obj.n, that.networkID, obj);
                     that.networkID = obj.n;
                 }
             }
