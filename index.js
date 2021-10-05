@@ -62,7 +62,7 @@ class MainToolboxSocket extends ToolboxEventEmitter {
             "items": {
                 "properties": {
                     "i": {"type": ["integer", "null"], "minimum": 0, "maximum": Number.MAX_SAFE_INTEGER},
-                    "o": {"type": "string", "minLength": 1, "maxLength": 10, "enum": ["server", "client", "web"]},
+                    "o": {"type": "string", "minLength": 1, "maxLength": 10, "enum": ["server", "client", "web", "edge", "proxy"]},
                     "n": {"type": "string", "minLength": 1, "maxLength": 25, "pattern": "^[A-Za-z0-9_]*$"},
                     "m": {"type": "string", "minLength": 1, "maxLength": 10, "enum": ["beat", "action", "ping", "get", "post", "put", "patch", "delete", "new", "unsub", "sub", "pub", "message", "res"]},
                     "r": {"type": "string", "minLength": 0, "maxLength": 2000, "pattern": "^[A-Za-z0-9_/?:&+.%=-]*$"},
