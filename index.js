@@ -77,7 +77,6 @@ class ToolboxUtilities {
             } else verdict = false;
         }
         if(!validRequired(obj, schema.items.required)) verdict = false;
-        console.log(verdict);
         return verdict;
     }
 }
