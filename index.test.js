@@ -2,8 +2,9 @@ const ToolSocket = require('./index.js');
 let client = new ToolSocket("ws://localhost:1234", "xkjhasdflk", "web");
 var server = new ToolSocket.Server({port: 1234})
 
+
 setTimeout(function(){
-    process.exit();
+    // just waiting to kill some time.
 },3000);
 
 test('server & client connection test', done => {
@@ -196,5 +197,39 @@ test('validate(): out of range body validation', () => {
     obj = new client.DataPackage('client', "dklasdjd", "post", "/", string,  1);
     expect(client.validate(obj, JSON.stringify(object).length, client.dataPackageSchema)).toBe(false);
 });
+let jsonFromURLRouteSchema = {
+    "type": "object",
+    "items": {
+        "properties": {
+            "n": {"type": "string", "minLength": 1, "maxLength": 25, "pattern": "^[A-Za-z0-9_]*$"},
+            "s": {"type": ["string", "null", "undefined"], "minLength": 0, "maxLength": 45, "pattern": "^[A-Za-z0-9_]*$"},
+            "ip": {"type": "string", "minLength": 0, "maxLength": 2000, "pattern": "^[A-Za-z0-9.-]*$"},
+            "p": {"type": ["string", "null", "undefined"], "minLength": 1, "maxLength": 5, "pattern": "^[0-9]*$"},
+        },
+        "required": ["ip", "n"],
+        "expected": ["n", "s", "ip", "p"],
+    }
+}
 
+test('parseJsonFromUrl(): validation', () => {
+    var obj = "/xse/p/8080/l/skdjhlkdjh/n/eehsjdkalwoepsdwk2dJ/ip/192.168.1.2/obj/sdjhsdflkjh?adhsfhdfkldsj";
+    expect(client.parseUrl(obj, jsonFromURLRouteSchema)).toStrictEqual({"ip": "192.168.1.2", "n": "eehsjdkalwoepsdwk2dJ", "p": "8080"});
 
+});
+
+test('parseJsonFromUrl(): out of range validation', () => {
+    var obj = "/xse/p/8080/l/skdjhlkdjh/n/eehsjdkalwoepsdwk2dJ/ip/192.168.1.2/obj/sdjhsdflkjh?adhsfhdfkldsj";
+    expect(client.parseUrl(obj, {})).toBe(null);
+
+    obj = "/xse/p/8080/l/skdjhlkdjh/n/eehsjdkalwoepsdwk2dJ/ip/192.168.1+2/obj/sdjhsdflkjh?adhsfhdfkldsj";
+    expect(client.parseUrl(obj, jsonFromURLRouteSchema)).toBe(null);
+
+    obj = "/xse/p/8080/l/skdjhlkdjh/n/eehsjdka&&7lwoepsdwk2dJ/ip/192.168.1.2/obj/sdjhsdflkjh?adhsfhdfkldsj";
+    expect(client.parseUrl(obj, jsonFromURLRouteSchema)).toBe(null);
+
+    obj = "/xse/p/80998880/l/skdjhlkdjh/n/eehsjdkalwoepsdwk2dJ/ip/192.168.1.2/obj/sdjhsdflkjh?adhsfhdfkldsj";
+    expect(client.parseUrl(obj, jsonFromURLRouteSchema)).toBe(null);
+
+    obj = "/xse/sdjhsdflkjh?adhsfhdfkldsj";
+    expect(client.parseUrl(obj, jsonFromURLRouteSchema)).toBe(null);
+});

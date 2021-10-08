@@ -78,7 +78,10 @@ class ToolboxUtilities {
         }
         if(!validRequired(obj, schema.items.required)) verdict = false;
         return verdict;
-    }
+    };
+    parseUrl = (u, s) => {let i=u.split("/"),r={};
+        try{for(let w=0;w<i.length;w++)if(s.items.expected.includes(i[w]))if(i[w+1])r[i[w]]=i[w+1]}catch(e){return null}
+        if(this.validate(r,u.length,s))return r;else return null}
 }
 
 class MainToolboxSocket extends ToolboxUtilities {
