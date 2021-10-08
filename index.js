@@ -6,14 +6,83 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/
  */
 
-class ToolboxEventEmitter {
+class ToolboxUtilities {
     constructor(){this.eCb={}};
     on(e,...args){if(!this.eCb[e])this.eCb[e]=[];this.eCb[e].push(...args);};
     emit(e,...args){if(this.eCb[e])this.eCb[e].forEach(cb=>cb(...args));};
     removeAllListeners() {for(let k in this.eCb) delete this.eCb[k];};
+    validate = (obj, msgLength, schema,) => {
+        if(typeof obj !== "object") return false; // for now only objects
+        let validString = (obj, p, key) => {
+            if (typeof obj[key] !== 'string') return false; // this if is a hack to test for null as well
+            if (Number.isInteger(p[key].minLength)) if (obj[key].length < p[key].minLength) return false;
+            if (Number.isInteger(p[key].maxLength)) if (obj[key].length > p[key].maxLength) return false;
+            if (p[key].pattern) if (!obj[key].match(p[key].pattern)) return false;
+            if (p[key].enum) if (!p[key].enum.includes(obj[key])) return false;
+            return true;
+        }
+        let validInteger = (obj, p, key) => {
+            if (!Number.isInteger(obj[key])) return false;
+            if (Number.isInteger(p[key].minimum)) {if (obj[key] < p[key].minimum) return false;}
+            if (Number.isInteger(p[key].maximum)) {if (obj[key] > p[key].maximum) return false;}
+            return true;
+        }
+        let validNull = (obj, p, key) => {
+            if(obj.m === "res" && obj[key] === null) return false;
+            return obj[key] === null;
+        }
+        let validBoolean = (obj, p, key) => {
+            return typeof obj[key] === 'boolean';
+        }
+        let validNumber = (obj, p, key) => {
+            return typeof obj[key] === 'number';
+        }
+        let validUndefined = (obj, p, key) => {
+            return !obj[key];
+        }
+        let validArray = (obj, p, key, msgLength) => {
+            if (!Array.isArray(obj[key])) return false;
+
+            if (Number.isInteger(p[key].minLength)) if (msgLength < p[key].minLength) return false;
+            if (Number.isInteger(p[key].maxLength)) if (msgLength > p[key].maxLength) return false;
+            return true;
+        }
+        let validObject = (obj, p, key, msgLength) => {
+            if (typeof obj[key] !== 'object') return;
+            if (Number.isInteger(p[key].minLength)) if (msgLength < p[key].minLength) return false;
+            if (Number.isInteger(p[key].maxLength)) if (msgLength > p[key].maxLength) return false;
+            return true;
+        }
+        let validKey = (obj, p, key) => {
+            return p.hasOwnProperty(key);
+        }
+        let validRequired = (obj, required) => {
+            for (let key in required) {if(!obj.hasOwnProperty(required[key])) return false;}
+            return true;
+        }
+        let p = schema.items.properties;
+        let verdict = true;
+        for (let key in obj) {
+            if(validKey(obj, p, key)) {
+                let evaluate = false;
+                if (p[key].type.includes("string")) if(validString(obj, p, key)) evaluate = true;
+                if (p[key].type.includes("integer")) if(validInteger(obj, p, key)) evaluate = true;
+                if (p[key].type.includes("null")) if(validNull(obj, p, key)) evaluate = true;
+                if (p[key].type.includes("boolean")) if(validBoolean(obj, p, key)) evaluate = true;
+                if (p[key].type.includes("number")) if(validNumber(obj, p, key)) evaluate = true;
+                if (p[key].type.includes("array")) if(validArray(obj, p, key, msgLength)) evaluate = true; // use msg for length to simplify / speedup
+                if (p[key].type.includes("object")) if(validObject(obj, p, key, msgLength)) evaluate = true; // use msg for length to simplify / speedup
+                if (p[key].type.includes("undefined")) if(validUndefined(obj, p, key)) evaluate = true;
+                if(!evaluate) verdict = false;
+            } else verdict = false;
+        }
+        if(!validRequired(obj, schema.items.required)) verdict = false;
+        console.log(verdict);
+        return verdict;
+    }
 }
 
-class MainToolboxSocket extends ToolboxEventEmitter {
+class MainToolboxSocket extends ToolboxUtilities {
     constructor(url, networkID, origin) {
         super();
         let that = this;
@@ -82,78 +151,10 @@ class MainToolboxSocket extends ToolboxEventEmitter {
                 }
             }
         }
-        this.validate = (obj, msgLength, schema,) => {
-            if(typeof obj !== "object") return false; // for now only objects
-            let validString = (obj, p, key) => {
-                if (typeof obj[key] !== 'string') return false; // this if is a hack to test for null as well
-                if (Number.isInteger(p[key].minLength)) if (obj[key].length < p[key].minLength) return false;
-                if (Number.isInteger(p[key].maxLength)) if (obj[key].length > p[key].maxLength) return false;
-                if (p[key].pattern) if (!obj[key].match(p[key].pattern)) return false;
-                if (p[key].enum) if (!p[key].enum.includes(obj[key])) return false;
-                return true;
-            }
-            let validInteger = (obj, p, key) => {
-                if (!Number.isInteger(obj[key])) return false;
-                if (Number.isInteger(p[key].minimum)) {if (obj[key] < p[key].minimum) return false;}
-                if (Number.isInteger(p[key].maximum)) {if (obj[key] > p[key].maximum) return false;}
-                return true;
-            }
-            let validNull = (obj, p, key) => {
-                if(obj.m === "res" && obj[key] === null) return false;
-                return obj[key] === null;
-            }
-            let validBoolean = (obj, p, key) => {
-                return typeof obj[key] === 'boolean';
-            }
-            let validNumber = (obj, p, key) => {
-                return typeof obj[key] === 'number';
-            }
-            let validUndefined = (obj, p, key) => {
-                return !obj[key];
-            }
-            let validArray = (obj, p, key, msgLength) => {
-                if (!Array.isArray(obj[key])) return false;
-
-                if (Number.isInteger(p[key].minLength)) if (msgLength < p[key].minLength) return false;
-                if (Number.isInteger(p[key].maxLength)) if (msgLength > p[key].maxLength) return false;
-                return true;
-            }
-            let validObject = (obj, p, key, msgLength) => {
-                if (typeof obj[key] !== 'object') return;
-                if (Number.isInteger(p[key].minLength)) if (msgLength < p[key].minLength) return false;
-                if (Number.isInteger(p[key].maxLength)) if (msgLength > p[key].maxLength) return false;
-                return true;
-            }
-            let validKey = (obj, p, key) => {
-                return p.hasOwnProperty(key);
-            }
-            let validRequired = (obj, required) => {
-                for (let key in required) {if(!obj.hasOwnProperty(required[key])) return false;}
-                return true;
-            }
-            let p = schema.items.properties;
-            let verdict = true;
-            for (let key in obj) {
-                if(validKey(obj, p, key)) {
-                    let evaluate = false;
-                    if (p[key].type.includes("string")) if(validString(obj, p, key)) evaluate = true;
-                    if (p[key].type.includes("integer")) if(validInteger(obj, p, key)) evaluate = true;
-                    if (p[key].type.includes("null")) if(validNull(obj, p, key)) evaluate = true;
-                    if (p[key].type.includes("boolean")) if(validBoolean(obj, p, key)) evaluate = true;
-                    if (p[key].type.includes("number")) if(validNumber(obj, p, key)) evaluate = true;
-                    if (p[key].type.includes("array")) if(validArray(obj, p, key, msgLength)) evaluate = true; // use msg for length to simplify / speedup
-                    if (p[key].type.includes("object")) if(validObject(obj, p, key, msgLength)) evaluate = true; // use msg for length to simplify / speedup
-                    if (p[key].type.includes("undefined")) if(validUndefined(obj, p, key)) evaluate = true;
-                    if(!evaluate) verdict = false;
-                } else verdict = false;
-            }
-            if(!validRequired(obj, schema.items.required)) verdict = false;
-            return !verdict;
-        }
         this.router = (msg) => {
             let obj;
             try { obj = JSON.parse(msg); } catch (e) { console.log('no json'); return; }
-            if (that.validate(obj, msg.length, this.dataPackageSchema)) {
+            if (!that.validate(obj, msg.length, this.dataPackageSchema)) {
                 console.log("not allowed");
                 return;
             }
@@ -313,7 +314,7 @@ class ToolSocket extends MainToolboxSocket {
         // connect for the first time when opened.
         this.connect(this.url, this.networkID, this.origin);
     }
-    static Server = class Server extends ToolboxEventEmitter {
+    static Server = class Server extends ToolboxUtilities {
         constructor(param, origin) {
             super();
             if(origin) this.origin = origin; else this.origin = "server";
