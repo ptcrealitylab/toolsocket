@@ -79,9 +79,33 @@ class ToolboxUtilities {
         if(!validRequired(obj, schema.items.required)) verdict = false;
         return verdict;
     };
-    parseUrl = (url, schema) => {let i=url.split("/"),r={};
-        try{for(let w=0;w<i.length;w++)if(schema.items.expected.includes(i[w]))if(i[w+1])r[i[w]]=i[w+1]}catch(e){return null}
-        if(this.validate(r,url.length,schema))return r;else return null}
+    parseUrl = (url, schema) => {
+        let urlSplit=url.split("/")
+        let res={}
+        let route = "";
+        let querySplit = urlSplit[urlSplit.length-1].split("?");
+
+        if(querySplit[1]) {
+            urlSplit[urlSplit.length-1] = querySplit[0]
+        }
+        try{
+            schema.items.properties.query = {"type": "string", "minLength": 0, "maxLength": 2000, "pattern": "^[A-Za-z0-9~!@$%^&*()-_=+|;:,.]"};
+            schema.items.properties.route = {"type": "string", "minLength": 0, "maxLength": 2000, "pattern": "^[A-Za-z0-9/~!@$%^&*()-_=+|;:,.]*$"};
+            for(let i=0;i<urlSplit.length;i++) {
+                if (schema.items.expected.includes(urlSplit[i])) {
+                    if (urlSplit[i + 1])
+                        res[urlSplit[i]] = urlSplit[i + 1]
+                    i++;
+                } else if(urlSplit[i]){route = route +'/'+urlSplit[i]}
+            }
+       }catch(e){return null}
+        if(querySplit[1]) res.query = querySplit[1]
+        if(route) res.route = route;
+        if(this.validate(res,url.length,schema))
+            return res;
+        else
+            return null
+    }
 }
 
 class MainToolboxSocket extends ToolboxUtilities {

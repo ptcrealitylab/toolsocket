@@ -212,9 +212,8 @@ let jsonFromURLRouteSchema = {
 }
 
 test('parseJsonFromUrl(): validation', () => {
-    var obj = "/xse/p/8080/l/skdjhlkdjh/n/eehsjdkalwoepsdwk2dJ/ip/192.168.1.2/obj/sdjhsdflkjh?adhsfhdfkldsj";
-    expect(client.parseUrl(obj, jsonFromURLRouteSchema)).toStrictEqual({"ip": "192.168.1.2", "n": "eehsjdkalwoepsdwk2dJ", "p": "8080"});
-
+    var obj = "/xse/p/8080/l/skdjhlkdjh/n/eehsjdkalwoepsdwk2dJ/ip/192.168.1.2/obj/sdjhsdflkjh?adhsfhdfkldsj22376dgjsjfdhkfdh";
+    expect(client.parseUrl(obj, jsonFromURLRouteSchema)).toStrictEqual({"ip": "192.168.1.2", "n": "eehsjdkalwoepsdwk2dJ", "p": "8080", "query": "adhsfhdfkldsj22376dgjsjfdhkfdh", "route": "/xse/l/skdjhlkdjh/obj/sdjhsdflkjh"});
 });
 
 test('parseJsonFromUrl(): out of range validation', () => {
