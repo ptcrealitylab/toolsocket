@@ -125,7 +125,7 @@ class MainToolboxSocket extends ToolboxUtilities {
         this.netBeatInterval = 1000;
         this.networkID = networkID;
         this.url = url;
-        this.orging = origin;
+        this.origin = origin;
         this.CONNECTING = 0;
         this.OPEN = 1;
         this.CLOSING = 2;
@@ -313,11 +313,8 @@ class MainToolboxSocket extends ToolboxUtilities {
 }
 class ToolSocket extends MainToolboxSocket {
     constructor(url, networkID, origin) {
-        super();
+        super(url, networkID, origin);
         let that = this;
-        this.url = url;
-        this.networkID = networkID;
-        this.origin = origin;
         this.WebSocket = null;
         this.socket = null;
         if (typeof window === 'undefined') { this.WebSocket = require('ws'); this.envNode = true;
@@ -359,13 +356,12 @@ class ToolSocket extends MainToolboxSocket {
             this.server.on('connection', (socket, ...args) => {
                 class Socket extends MainToolboxSocket {
                     constructor(socket) {
-                        super();
+                        super(undefined, undefined, that.origin);
                         this._socket = socket._socket;
                         this.socket = socket;
                         this.envNode = true;
                         this.isServer = true;
                         this.readyState = this.OPEN;
-                        this.origin = that.origin;
                         this.attachEvents();
                     }
                 }

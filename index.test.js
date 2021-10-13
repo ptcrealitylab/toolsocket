@@ -228,7 +228,14 @@ test('parseJsonFromUrl(): out of range validation', () => {
     expect(client.parseUrl(obj, jsonFromURLRouteSchema)).toBe(null);
 });
 
+
+test('server and client contain correct origins', () => {
+  expect(server.origin).toBe('server');
+  expect(client.origin).toBe('web');
+});
+
 afterAll(() => {
   client.close();
   server.server.close();
+
 });
