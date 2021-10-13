@@ -89,7 +89,7 @@ class ToolboxUtilities {
         if(querySplit[1]) {
             urlSplit[urlSplit.length-1] = querySplit[0]
         }
-        
+
         try{
             schema.items.properties.type = {"type": "string", "minLength": 1, "maxLength": 5, "enum": ["jpg", "jpeg", "gif", "html", "htm", "xml", "dat","png"]};
             schema.items.properties.query = {"type": "string", "minLength": 0, "maxLength": 2000, "pattern": "^[A-Za-z0-9~!@$%^&*()-_=+|;:,.]"};
@@ -109,6 +109,9 @@ class ToolboxUtilities {
             return res;
         else
             return null
+    }
+    uuidShort = (length) => { let abcUuid = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", uuid = "";
+        while (uuid.length < length) uuid = abcUuid.charAt(Math.floor(Math.random() * abcUuid.length)) + uuid; return uuid;
     }
 }
 
@@ -160,7 +163,7 @@ class MainToolboxSocket extends ToolboxUtilities {
             "type": "object",
             "items": {
                 "properties": {
-                    "i": {"type": ["integer", "null"], "minimum": 0, "maximum": Number.MAX_SAFE_INTEGER},
+                    "i": {"type": ["string", "null", "undefined"], "minLength": 1, "maxLength": 22, "pattern": "^[A-Za-z0-9_]*$"},
                     "o": {"type": "string", "minLength": 1, "maxLength": 10, "enum": ["server", "client", "web", "edge", "proxy"]},
                     "n": {"type": "string", "minLength": 1, "maxLength": 25, "pattern": "^[A-Za-z0-9_]*$"},
                     "m": {"type": "string", "minLength": 1, "maxLength": 10, "enum": ["beat", "action", "ping", "get", "post", "put", "patch", "delete", "new", "unsub", "sub", "pub", "message", "res"]},
@@ -251,8 +254,8 @@ class MainToolboxSocket extends ToolboxUtilities {
                 } else {
                     this.packageID = 0;
                 }
-                obj.i = this.packageID;
-                this.packageCb[this.packageID] = new this.CbObj(callback, Date.now(), obj);
+                obj.i = this.packageID+this.uuidShort(4);
+                this.packageCb[obj.i] = new this.CbObj(callback, Date.now(), obj);
             } else {
                 if (obj.m !== 'res')
                     obj.i = null;

@@ -89,89 +89,89 @@ test('server & client connection test', done => {
 test('validate(): normal package validation', () => {
     client.dataPackageSchema.items.properties.o.enum.map(origin => {
         client.dataPackageSchema.items.properties.m.enum.map(method => {
-            expect(client.validate(new client.DataPackage(origin, "dklasdjd", method, "/", "{test:rest}", 2), 2000, client.dataPackageSchema)).toBe(true);
+            expect(client.validate(new client.DataPackage(origin, "dklasdjd", method, "/", "{test:rest}", "2xsN"), 2000, client.dataPackageSchema)).toBe(true);
         });
     });
     expect(client.validate(new client.DataPackage("client", "dklasdjd", "post", "/", "{test:rest}", null), 2000, client.dataPackageSchema)).toBe(true);
-    expect(client.validate(new client.DataPackage("client", "dklasdjd", "post", "/", "{test:rest}", 0), 2000, client.dataPackageSchema)).toBe(true);
+    expect(client.validate(new client.DataPackage("client", "dklasdjd", "post", "/", "{test:rest}", "0xNsd"), 2000, client.dataPackageSchema)).toBe(true);
 });
 test('validate(): out of range ID validation', () => {
-    var obj = new client.DataPackage("client", "dklasdjd", "post", "/", "{test:rest}",  Number.MAX_SAFE_INTEGER+1);
+    var obj = new client.DataPackage("client", "dklasdjd", "post", "/", "{test:rest}", Number.MAX_SAFE_INTEGER+1);
     expect(client.validate(obj, 2000, client.dataPackageSchema)).toBe(false);
-     obj = new client.DataPackage("client", "dklasdjd", "post", "/", "{test:rest}",  "sdsds");
+     obj = new client.DataPackage("client", "dklasdjd", "post", "/", "{test:rest}", "skjdhslkdjgsdklshgjhgkjhgkjhgkjhgkjhgkjhgkjhgkjhgkjhgkjhgkjhgkjhgkjhgksdsds");
     expect(client.validate(obj, 2000, client.dataPackageSchema)).toBe(false);
-    obj = new client.DataPackage("client", "dklasdjd", "post", "/", "{test:rest}",  -1);
+    obj = new client.DataPackage("client", "dklasdjd", "post", "/", "{test:rest}", -1);
     expect(client.validate(obj, 2000, client.dataPackageSchema)).toBe(false);
 });
 test('validate(): out of range origin validation', () => {
-    var obj = new client.DataPackage("cl&ient", "dklasdjd", "post", "/", "{test:rest}", 1);
+    var obj = new client.DataPackage("cl&ient", "dklasdjd", "post", "/", "{test:rest}", "1dshh");
     expect(client.validate(obj, 2000, client.dataPackageSchema)).toBe(false);
-    obj = new client.DataPackage(2394876234983649892738462398746, "dklasdjd", "post", "/", "{test:rest}",  1);
+    obj = new client.DataPackage(2394876234983649892738462398746, "dklasdjd", "post", "/", "{test:rest}", "1dshh");
     expect(client.validate(obj, 2000, client.dataPackageSchema)).toBe(false);
-    obj = new client.DataPackage("something", "dklasdjd", "post", "/", "{test:rest}",  1);
+    obj = new client.DataPackage("something", "dklasdjd", "post", "/", "{test:rest}", "1dshh");
     expect(client.validate(obj, 2000, client.dataPackageSchema)).toBe(false);
     let string = "";
     while(string.length<2000){
         string = string +"client";
     }
-    obj = new client.DataPackage(string, "dklasdjd", "post", "/", "{test:rest}",  1);
+    obj = new client.DataPackage(string, "dklasdjd", "post", "/", "{test:rest}", "1dshh");
     expect(client.validate(obj, 2000, client.dataPackageSchema)).toBe(false);
 });
 
 test('validate(): out of range method validation', () => {
-    var obj = new client.DataPackage("client", "dklasdjd", "po''st", "/", "{test:rest}", 1);
+    var obj = new client.DataPackage("client", "dklasdjd", "po''st", "/", "{test:rest}", "1dshh");
     expect(client.validate(obj, 2000, client.dataPackageSchema)).toBe(false);
-    obj = new client.DataPackage("client", "dklasdjd", 2348734092387402394867230492376492347639487, "/", "{test:rest}",  1);
+    obj = new client.DataPackage("client", "dklasdjd", 2348734092387402394867230492376492347639487, "/", "{test:rest}", "1dshh");
     expect(client.validate(obj, 2000, client.dataPackageSchema)).toBe(false);
-    obj = new client.DataPackage("client", "dklasdjd", null, "/", "{test:rest}",  1);
+    obj = new client.DataPackage("client", "dklasdjd", null, "/", "{test:rest}", "1dshh");
     expect(client.validate(obj, 2000, client.dataPackageSchema)).toBe(false);
     let string = "";
     while(string.length<2000){
         string = string +"post";
     }
-    obj = new client.DataPackage("client", "dklasdjd", string, "/", "{test:rest}",  1);
+    obj = new client.DataPackage("client", "dklasdjd", string, "/", "{test:rest}", "1dshh");
     expect(client.validate(obj, 2000, client.dataPackageSchema)).toBe(false);
 });
 
 test('validate(): out of range network validation', () => {
-    var obj = new client.DataPackage("client", "cli''ent", "post", "/", "{test:rest}", 1);
+    var obj = new client.DataPackage("client", "cli''ent", "post", "/", "{test:rest}", "1dshh");
     expect(client.validate(obj, 2000, client.dataPackageSchema)).toBe(false);
     obj = new client.DataPackage("client", 2, "post", "/", "{test:rest}",  1);
     expect(client.validate(obj, 2000, client.dataPackageSchema)).toBe(false);
-    obj = new client.DataPackage("client", "some%$thing", "post", "/", "{test:rest}",  1);
+    obj = new client.DataPackage("client", "some%$thing", "post", "/", "{test:rest}", "1dshh");
     expect(client.validate(obj, 2000, client.dataPackageSchema)).toBe(false);
     let string = "";
     while(string.length<2000){
         string = string +"client";
     }
-    obj = new client.DataPackage("client", string, "post", "/", "{test:rest}",  1);
+    obj = new client.DataPackage("client", string, "post", "/", "{test:rest}", "1dshh");
     expect(client.validate(obj, 2000, client.dataPackageSchema)).toBe(false);
 });
 test('validate(): out of range route validation', () => {
-    var obj = new client.DataPackage("client", "dklasdjd", "post", "/''", "{test:rest}", 1);
+    var obj = new client.DataPackage("client", "dklasdjd", "post", "/''", "{test:rest}", "1dshh");
     expect(client.validate(obj, 2000, client.dataPackageSchema)).toBe(false);
-    obj = new client.DataPackage("client", "dklasdjd", "post", 232312423423543523534565436456, "{test:rest}",  1);
+    obj = new client.DataPackage("client", "dklasdjd", "post", 232312423423543523534565436456, "{test:rest}", "1dshh");
     expect(client.validate(obj, 2000, client.dataPackageSchema)).toBe(false);
-    obj = new client.DataPackage("client", "dklasdjd", "post", "/&%(/$&)/=()(/", "{test:rest}",  1);
+    obj = new client.DataPackage("client", "dklasdjd", "post", "/&%(/$&)/=()(/", "{test:rest}", "1dshh");
     expect(client.validate(obj, 2000, client.dataPackageSchema)).toBe(false);
     let string = "";
     while(string.length<2000){
         string = string +"client";
     }
-    obj = new client.DataPackage('client', "dklasdjd", "post", string, "{test:rest}",  1);
+    obj = new client.DataPackage('client', "dklasdjd", "post", string, "{test:rest}", "1dshh");
     expect(client.validate(obj, 2000, client.dataPackageSchema)).toBe(false);
 });
 
 test('validate(): body validation', () => {
-    var obj = new client.DataPackage("client", "dklasdjd", "post", "/", 0, 1);
+    var obj = new client.DataPackage("client", "dklasdjd", "post", "/", 0, "1xaJk");
     expect(client.validate(obj, 2000, client.dataPackageSchema)).toBe(true);
-    var obj = new client.DataPackage("client", "dklasdjd", "post", "/", "''zwidugaodig826/%&(8758765", 1);
+    var obj = new client.DataPackage("client", "dklasdjd", "post", "/", "''zwidugaodig826/%&(8758765", "1fdJ");
     expect(client.validate(obj, 2000, client.dataPackageSchema)).toBe(true);
-    var obj = new client.DataPackage("client", "dklasdjd", "post", "/", {test : 0}, 1);
+    var obj = new client.DataPackage("client", "dklasdjd", "post", "/", {test : 0}, "1djwH");
     expect(client.validate(obj, 2000, client.dataPackageSchema)).toBe(true);
-    var obj = new client.DataPackage("client", "dklasdjd", "post", "/", null, 1);
+    var obj = new client.DataPackage("client", "dklasdjd", "post", "/", null, "1dshh");
     expect(client.validate(obj, 2000, client.dataPackageSchema)).toBe(true);
-    var obj = new client.DataPackage("client", "dklasdjd", "post", "/", [0,1,4,2,4,5], 1);
+    var obj = new client.DataPackage("client", "dklasdjd", "post", "/", [0,1,4,2,4,5], "1sHs");
     expect(client.validate(obj, 2000, client.dataPackageSchema)).toBe(true);
 });
 
@@ -180,21 +180,21 @@ test('validate(): out of range body validation', () => {
     while(string.length<70000002){
         string = string +"client";
     }
-    obj = new client.DataPackage('client', "dklasdjd", "post", "/", string,  1);
+    obj = new client.DataPackage('client', "dklasdjd", "post", "/", string, "1dshh");
     expect(client.validate(obj, string.length, client.dataPackageSchema)).toBe(false);
 
     let array = [];
     while(string.length<70000002){
         array.push("cl");
     }
-    obj = new client.DataPackage('client', "dklasdjd", "post", "/", string,  1);
+    obj = new client.DataPackage('client', "dklasdjd", "post", "/", string, "1dshh");
     expect(client.validate(obj, JSON.stringify(array).length, client.dataPackageSchema)).toBe(false);
 
     let object = {};
     for (let step = 0; step < 87500; step++) {
         object[step] = "xl"
     }
-    obj = new client.DataPackage('client', "dklasdjd", "post", "/", string,  1);
+    obj = new client.DataPackage('client', "dklasdjd", "post", "/", string, "1dshh");
     expect(client.validate(obj, JSON.stringify(object).length, client.dataPackageSchema)).toBe(false);
 });
 let jsonFromURLRouteSchema = {
@@ -219,7 +219,6 @@ test('parseJsonFromUrl(): validation', () => {
     expect(client.parseUrl(obj, jsonFromURLRouteSchema)).toStrictEqual({"ip": "192.168.1.2", "n": "eehsjdkalwoepsdwk2dJ", "p": "8080", "query": "adhsfhdfkldsj22376dgjsjfdhkfdh", "route": "/xse/l/skdjhlkdjh/obj/sdjhsdflkjh.gif", "type": "gif"}, );
 
 });
-
 
 test('parseJsonFromUrl(): out of range validation', () => {
     var obj = "/xse/p/8080/l/skdjhlkdjh/n/eehsjdkalwoepsdwk2dJ/ip/192.168.1.2/obj/sdjhsdflkjh?adhsfhdfkldsj";
