@@ -125,7 +125,7 @@ class MainToolboxSocket extends ToolboxUtilities {
         this.netBeatInterval = 1000;
         this.networkID = networkID;
         this.url = url;
-        this.orging = origin;
+        this.origin = origin;
         this.CONNECTING = 0;
         this.OPEN = 1;
         this.CLOSING = 2;
