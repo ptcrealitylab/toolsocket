@@ -2,11 +2,6 @@ const ToolSocket = require('./index.js');
 let client = new ToolSocket("ws://localhost:1234", "xkjhasdflk", "web");
 var server = new ToolSocket.Server({port: 1234})
 
-
-setTimeout(function(){
-    // just waiting to kill some time.
-},3000);
-
 test('server & client connection test', done => {
     let string = "";
     while(string.length<1000000){
@@ -48,9 +43,6 @@ test('server & client connection test', done => {
         });
     })
     server.on('connection', function connection(ws) {
-        setTimeout(function(){
-            ws.close();
-        },1000);
         client.dataPackageSchema.items.properties.m.enum.map(method => {
             ws.on(method, function (route, msg, res) {
                 if(route === "action/ping"){
@@ -78,11 +70,10 @@ test('server & client connection test', done => {
             expect(packageCount).toBe(packageRes);
             expect(hello).toBe(true);
             expect(simple).toBe(true);
+            ws.close();
+            client.close();
             done();
         },500);
-        setTimeout(function(){
-            client.socket.close();
-        },1000);
     });
 });
 
@@ -235,4 +226,9 @@ test('parseJsonFromUrl(): out of range validation', () => {
 
     obj = "/xse/sdjhsdflkjh?adhsfhdfkldsj";
     expect(client.parseUrl(obj, jsonFromURLRouteSchema)).toBe(null);
+});
+
+afterAll(() => {
+  client.close();
+  server.server.close();
 });
