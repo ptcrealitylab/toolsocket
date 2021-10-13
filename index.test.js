@@ -227,3 +227,8 @@ test('parseJsonFromUrl(): out of range validation', () => {
     obj = "/xse/sdjhsdflkjh?adhsfhdfkldsj";
     expect(client.parseUrl(obj, jsonFromURLRouteSchema)).toBe(null);
 });
+
+afterAll(() => {
+  client.close();
+  server.server.close();
+});
