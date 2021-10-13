@@ -232,6 +232,7 @@ test('parseJsonFromUrl(): out of range validation', () => {
 test('server and client contain correct origins', () => {
   expect(server.origin).toBe('server');
   expect(client.origin).toBe('web');
+});
 
 afterAll(() => {
   client.close();
