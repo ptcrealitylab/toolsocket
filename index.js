@@ -104,7 +104,7 @@ class ToolboxUtilities {
        }catch(e){return null}
         if(querySplit[1]) res.query = querySplit[1]
         if(route) res.route = route;
-        if(fileSplit[1]) res.type = fileSplit[1];
+        if(fileSplit.length > 1) res.type = fileSplit[fileSplit.length-1];
         if(this.validate(res,url.length,schema))
             return res;
         else
