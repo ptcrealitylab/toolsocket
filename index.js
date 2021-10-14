@@ -91,7 +91,7 @@ class ToolboxUtilities {
         }
 
         try{
-            schema.items.properties.type = {"type": "string", "minLength": 1, "maxLength": 5, "enum": ["jpg", "jpeg", "gif", "html", "htm", "xml", "dat","png"]};
+            schema.items.properties.type = {"type": "string", "minLength": 1, "maxLength": 5, "enum": ["jpg", "jpeg", "gif", "zip", "glb", "html", "htm", "xml", "dat","png", "js", "json", "obj", "fbx", "pdf", "csv", "css"]};
             schema.items.properties.query = {"type": "string", "minLength": 0, "maxLength": 2000, "pattern": "^[A-Za-z0-9~!@$%^&*()-_=+|;:,.]"};
             schema.items.properties.route = {"type": "string", "minLength": 0, "maxLength": 2000, "pattern": "^[A-Za-z0-9/~!@$%^&*()-_=+|;:,.]*$"};
             for(let i=0;i<urlSplit.length;i++) {
