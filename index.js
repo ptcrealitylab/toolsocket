@@ -342,9 +342,11 @@ class MainIo extends ToolboxUtilities {
         });
         this.socket.on('connecting', () => { this.emit('connecting'); });
         this.socket.on('close', () => {
+            this.emit('disconnect');
             this.returnObject.connected = false;
-            if(this.sockets) if(this.sockets.connected) if(this.returnObject) if(this.returnObject.id)
+            if(this.sockets) if(this.sockets.connected) if(this.returnObject) if(this.returnObject.id){
                 delete this.sockets.connected[this.returnObject.id];
+            }
             this.emit('close');
             this.removeAllListeners();
         });
@@ -384,6 +386,9 @@ class MainIo extends ToolboxUtilities {
             } else if (proxy.protocol === 'http:'){
                 proxy.ws = 'ws://'}
             url = proxy.ws + proxy.ip + ':' + proxy.port + proxy.route;
+        }
+        if(url.indexOf("http") === 0) {
+            url = url.replace('http', 'ws')
         }
 
         let getURLData = this.parseUrl(url, this.routeSchema);
@@ -474,7 +479,7 @@ class ToolSocket extends MainToolboxSocket {
                 if (typeof window !== 'undefined') return;
                 let that = this;
                 console.log('Server init')
-                this.id = 0;
+                this.id = 1;
                 this.sockets = {
                     connected : {},
                 };
@@ -503,7 +508,7 @@ class ToolSocket extends MainToolboxSocket {
                             return this.returnObject;
                         }
                     }
-                    if(that.id>= Number.MAX_SAFE_INTEGER) that.id = 0;
+                    if(that.id>= Number.MAX_SAFE_INTEGER) that.id = 1;
                     that.id++;
                     that.sockets.connected[that.id] = new Socket(socket);
                     that.sockets.connected[that.id].id = that.id;
@@ -529,5 +534,5 @@ class ToolSocket extends MainToolboxSocket {
 if (typeof window === 'undefined')
 {  module.exports = ToolSocket;
 } else {
-   let io = new ToolSocket.Io();
+    var io = new ToolSocket.Io();
 }
