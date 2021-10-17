@@ -130,6 +130,7 @@ class MainToolboxSocket extends ToolboxUtilities {
         this.OPEN = 1;
         this.CLOSING = 2;
         this.CLOSED = 3;
+        this.id = 0;
         this.readyState = 3;
         this.rsOld = null;
         this.packageID = 0;
@@ -166,7 +167,7 @@ class MainToolboxSocket extends ToolboxUtilities {
                     "i": {"type": ["string", "null", "undefined"], "minLength": 1, "maxLength": 22, "pattern": "^[A-Za-z0-9_]*$"},
                     "o": {"type": "string", "minLength": 1, "maxLength": 10, "enum": ["server", "client", "web", "edge", "proxy"]},
                     "n": {"type": "string", "minLength": 1, "maxLength": 25, "pattern": "^[A-Za-z0-9_]*$"},
-                    "m": {"type": "string", "minLength": 1, "maxLength": 10, "enum": ["beat", "action", "ping", "get", "post", "put", "patch", "delete", "new", "unsub", "sub", "pub", "message", "res"]},
+                    "m": {"type": "string", "minLength": 1, "maxLength": 10, "enum": ["beat", "action", "ping", "get", "post", "put", "patch", "delete", "new", "unsub", "sub", "pub", "message", "io", "res"]},
                     "r": {"type": "string", "minLength": 0, "maxLength": 2000, "pattern": "^[A-Za-z0-9_/?:&+.%=-]*$"},
                     "b": {"type": ["boolean", "array", "number", "string", "object"], "minLength": 0, "maxLength": 70000000},
                     "s": {"type": ["string", "null", "undefined"], "minLength": 0, "maxLength": 45, "pattern": "^[A-Za-z0-9_]*$"}
@@ -188,15 +189,17 @@ class MainToolboxSocket extends ToolboxUtilities {
             let obj;
             try { obj = JSON.parse(msg); } catch (e) { console.log('no json'); return; }
             if (!that.validate(obj, msg.length, this.dataPackageSchema)) {
-                console.log("not allowed");
+
+                console.log(obj, "not allowed");
                 return;
             }
 
             if (obj.m === 'ping') {
                 that.send(new that.DataPackage(that.origin, obj.n, 'res', obj.r, 'pong', obj.i));
                 if (that.networkID !== obj.n) {
-                    this.emit('network', obj.n, that.networkID, obj);
                     that.networkID = obj.n;
+                    this.emit('network', obj.n, that.networkID, obj);
+
                 }
             }
             if (obj.i && obj.m === 'res') {
@@ -239,7 +242,7 @@ class MainToolboxSocket extends ToolboxUtilities {
             }
         }.bind(this), this.timetoRequestPackage);
 
-        this.message =  this.new =  this.delete = this.patch =
+        this.message =  this.new =  this.delete = this.patch = this.io =
             this.put = this.post = this.get = this.action = this.beat = (route, body, callback) => {};
         for (let value of this.dataPackageSchema.items.properties.m.enum) {
             this[value] = (route, body, callback) => {
@@ -311,6 +314,94 @@ class MainToolboxSocket extends ToolboxUtilities {
         this.setNetworkId = (networkId) =>  this.networkID = networkId;
     }
 }
+
+class MainIo extends ToolboxUtilities {
+    constructor() {
+        super();
+        this.network = null;
+        this.origin = null;
+        this.socket = null;
+        this.id = 0;
+        this.routeSchema = {
+            "type": "object",
+            "items": {
+                "properties": {
+                    "n": {"type": "string", "minLength": 1, "maxLength": 25, "pattern": "^[A-Za-z0-9_]*$"}
+                },
+                "required": ["n"],
+                "expected": ["n"],
+            }
+        }
+    }
+    attachEvents() {
+        let that = this;
+
+        this.socket.on('connected', () => {
+            this.returnObject.connected = true;
+            this.emit('connected'); this.emit('connection');this.emit('connect');
+        });
+        this.socket.on('connecting', () => { this.emit('connecting'); });
+        this.socket.on('close', () => {
+            this.returnObject.connected = false;
+            if(this.sockets) if(this.sockets.connected) if(this.returnObject) if(this.returnObject.id)
+                delete this.sockets.connected[this.returnObject.id];
+            this.emit('close');
+            this.removeAllListeners();
+        });
+        this.socket.on('open', () => {
+
+            this.returnObject.connected = true;
+            this.emit('connect'); this.emit('connection');
+        });
+        this.socket.on('error', (err) => { this.emit('error', err);  });
+        this.socket.on('io', (route, msg) => { this.emit(route, msg);
+          });
+    }
+    connect (url, network, origin){
+        if (this.socket) {
+            this.returnObject.connected = false;
+            this.socket.close();
+            this.removeAllListeners();
+        }
+        this.origin = "server";
+        this.network = "io";
+        if (network) this.network = network;
+        if (origin) this.origin = origin;
+        if(typeof window !== 'undefined') {
+            this.origin = "web";
+        }
+
+        if(!url && typeof window !== 'undefined') {
+            let proxy = {
+                route : location.pathname,
+                port: location.port,
+                ip: location.hostname,
+                protocol: location.protocol,
+                ws : "ws://"
+            }
+            if(proxy.protocol === 'https:'){
+                proxy.ws = 'wss://'
+            } else if (proxy.protocol === 'http:'){
+                proxy.ws = 'ws://'}
+            url = proxy.ws + proxy.ip + ':' + proxy.port + proxy.route;
+        }
+
+        let getURLData = this.parseUrl(url, this.routeSchema);
+        if(getURLData) if(getURLData.n && !network) this.network = getURLData.n
+
+        this.socket =  new ToolSocket(url, this.network, this.origin);
+        this.attachEvents();
+        let that = this;
+        this.returnObject = {
+            on :  (route, cb) => that.on(route, (msg) => cb(msg)),
+            emit: (title, message) => that.socket.io(title, message),
+            connected : false
+        }
+        return this.returnObject;
+    };
+
+}
+
 class ToolSocket extends MainToolboxSocket {
     constructor(url, networkID, origin) {
         super(url, networkID, origin);
@@ -370,6 +461,73 @@ class ToolSocket extends MainToolboxSocket {
             });
         };
     }
+
+    static Io = class Io extends MainIo {
+        constructor(url, networkID, origin) {
+            super(url, networkID, origin);
+        }
+
+        static Server = class Server extends ToolboxUtilities {
+            constructor(param, origin) {
+                super();
+                if(origin) this.origin = origin; else this.origin = "server";
+                if (typeof window !== 'undefined') return;
+                let that = this;
+                console.log('Server init')
+                this.id = 0;
+                this.sockets = {
+                    connected : {},
+                };
+
+                this.server = new ToolSocket.Server(param);
+                this.server.on('connection', (socket, ...args) => {
+                    class Socket extends MainIo {
+                        constructor(socket, ...args) {
+                            super(socket, ...args);
+                            this.socket = socket;
+                            this.sockets = that.sockets;
+                            this.socket.networkID = "io";
+                            this.envNode = true;
+                            this.isServer = true;
+                            return this.connect();
+                        }
+                        connect(){
+                            let that = this;
+                            this.attachEvents();
+                            this.returnObject = {
+                                on :  (route, cb) => that.on(route, (msg) => cb(msg)),
+                                emit:  (title, message) => that.socket.io(title, message),
+                                connected : true
+                            }
+
+                            return this.returnObject;
+                        }
+                    }
+                    if(that.id>= Number.MAX_SAFE_INTEGER) that.id = 0;
+                    that.id++;
+                    that.sockets.connected[that.id] = new Socket(socket);
+                    that.sockets.connected[that.id].id = that.id;
+                    that.emit('connection', that.sockets.connected[that.id], ...args);
+                });
+
+
+
+            };
+        }
+
 }
+
+}
+
+
+
+// todo I need to overwrite these emitters
+// todo make sure that connections get closed
+
+
+
 if (typeof window === 'undefined')
-{  module.exports = ToolSocket; }
+{  module.exports = ToolSocket;
+} else {
+   let io = new ToolSocket.Io();
+}

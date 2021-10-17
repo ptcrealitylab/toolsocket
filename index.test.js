@@ -43,6 +43,8 @@ test('server & client connection test', done => {
         });
     })
     server.on('connection', function connection(ws) {
+        ws.io('/', 'hello');
+
         client.dataPackageSchema.items.properties.m.enum.map(method => {
             ws.on(method, function (route, msg, res) {
                 if(route === "action/ping"){
