@@ -83,13 +83,18 @@ class ToolboxUtilities {
         let urlProtocol=url.split("://")
         let protocol = null;
         let server = null;
+        let port = null;
         if(urlProtocol) if(urlProtocol[1]){
             url = urlProtocol[1];
             protocol = urlProtocol[0];
         }
 
         let urlSplit=url.split("/")
-        if(protocol) {server = urlSplit[0]; urlSplit.shift();
+        if(protocol) {
+            server = urlSplit[0]; urlSplit.shift();
+            let serverSplit = server.split(":")
+            server = serverSplit[0];
+            if(serverSplit[1]) port = parseInt(Number(serverSplit[1]));
         }
         let res={}
         let route = "";
@@ -109,6 +114,7 @@ class ToolboxUtilities {
             if(!schema.items.properties.query)  schema.items.properties.query = {"type": "string", "minLength": 0, "maxLength": 2000, "pattern": "^[A-Za-z0-9~!@$%^&*()-_=+|;:,.]"};
             if(!schema.items.properties.server)  schema.items.properties.server = {"type": "string", "minLength": 0, "maxLength": 2000, "pattern": "^[A-Za-z0-9~!@$%^&*()-_=+|;:,.]"};
             if(!schema.items.properties.route )  schema.items.properties.route = {"type": "string", "minLength": 0, "maxLength": 2000, "pattern": "^[A-Za-z0-9/~!@$%^&*()-_=+|;:,.]*$"};
+            if(!schema.items.properties.port )  schema.items.properties.port = {"type": "number", "min": 0, "max": 99999};
             for(let i=0;i<urlSplit.length;i++) {
                 if (schema.items.expected.includes(urlSplit[i])) {
                     if (urlSplit[i + 1])
@@ -121,6 +127,7 @@ class ToolboxUtilities {
         if(route) res.route = route;
         if(server) res.server = server;
         if(protocol) res.protocol = protocol;
+        if(port) res.port = port;
         if(fileSplit) if(fileSplit.length > 1) res.type = fileSplit[fileSplit.length-1];
         if(this.validate(res,url.length,schema))
             return res;
