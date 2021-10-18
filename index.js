@@ -104,7 +104,7 @@ class ToolboxUtilities {
         }
 
         try{
-            if(!schema.items.properties.type) schema.items.properties.type = {"type": "string", "minLength": 1, "maxLength": 5, "enum": ["jpg", "jpeg", "gif", "zip", "glb", "html", "htm", "xml", "dat", "png", "js", "json", "obj", "fbx", "svg", "mp4", "pdf", "csv", "css"]};
+            if(!schema.items.properties.type) schema.items.properties.type = {"type": "string", "minLength": 1, "maxLength": 5, "enum": ["jpg", "jpeg", "gif", "zip", "glb", "html", "htm", "xml", "dat", "png", "js", "json", "obj", "fbx", "svg", "mp4", "pdf", "csv", "css", "woff", "otf", "webm","webp", "ttf"]};
             if(!schema.items.properties.protocol) schema.items.properties.protocol = {"type": "string", "minLength": 1, "maxLength": 20, "enum": ["spatialtoolbox", "ws", "wss", "http", "https"]};
             if(!schema.items.properties.query)  schema.items.properties.query = {"type": "string", "minLength": 0, "maxLength": 2000, "pattern": "^[A-Za-z0-9~!@$%^&*()-_=+|;:,.]"};
             if(!schema.items.properties.server)  schema.items.properties.server = {"type": "string", "minLength": 0, "maxLength": 2000, "pattern": "^[A-Za-z0-9~!@$%^&*()-_=+|;:,.]"};
@@ -463,7 +463,7 @@ class ToolSocket extends MainToolboxSocket {
             if(origin) this.origin = origin; else this.origin = "server";
             if (typeof window !== 'undefined') return;
             let that = this;
-            console.log('Server init')
+            console.log('ToolSocket Server Start')
             let WebSocket = require('ws');
             this.server = new WebSocket.Server(param);
             this.server.on('connection', (socket, ...args) => {
@@ -495,7 +495,7 @@ class ToolSocket extends MainToolboxSocket {
                 if(origin) this.origin = origin; else this.origin = "server";
                 if (typeof window !== 'undefined') return;
                 let that = this;
-                console.log('Server init')
+                console.log('IO is waiting for ToolSocket Server')
                 this.id = 1;
                 this.sockets = {
                     connected : {},
