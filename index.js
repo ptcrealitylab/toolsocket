@@ -80,20 +80,35 @@ class ToolboxUtilities {
         return verdict;
     };
     parseUrl = (url, schema) => {
+        let urlProtocol=url.split("://")
+        let protocol = null;
+        let server = null;
+        if(urlProtocol) if(urlProtocol[1]){
+            url = urlProtocol[1];
+            protocol = urlProtocol[0];
+        }
+
         let urlSplit=url.split("/")
+        if(protocol) {server = urlSplit[0]; urlSplit.shift();
+        }
         let res={}
         let route = "";
-        let querySplit = urlSplit[urlSplit.length-1].split("?");
-        let fileSplit = querySplit[0].split(".");
-
+        let querySplit = [];
+        if(urlSplit[urlSplit.length-1]) querySplit = urlSplit[urlSplit.length-1].split("?");
+        let fileSplit = null;
+        if(querySplit) if(querySplit[0]) {
+             fileSplit = querySplit[0].split(".");
         if(querySplit[1]) {
             urlSplit[urlSplit.length-1] = querySplit[0]
         }
+        }
 
         try{
-            schema.items.properties.type = {"type": "string", "minLength": 1, "maxLength": 5, "enum": ["jpg", "jpeg", "gif", "zip", "glb", "html", "htm", "xml", "dat", "png", "js", "json", "obj", "fbx", "svg", "mp4", "pdf", "csv", "css"]};
-            schema.items.properties.query = {"type": "string", "minLength": 0, "maxLength": 2000, "pattern": "^[A-Za-z0-9~!@$%^&*()-_=+|;:,.]"};
-            schema.items.properties.route = {"type": "string", "minLength": 0, "maxLength": 2000, "pattern": "^[A-Za-z0-9/~!@$%^&*()-_=+|;:,.]*$"};
+            if(!schema.items.properties.type) schema.items.properties.type = {"type": "string", "minLength": 1, "maxLength": 5, "enum": ["jpg", "jpeg", "gif", "zip", "glb", "html", "htm", "xml", "dat", "png", "js", "json", "obj", "fbx", "svg", "mp4", "pdf", "csv", "css"]};
+            if(!schema.items.properties.protocol) schema.items.properties.protocol = {"type": "string", "minLength": 1, "maxLength": 20, "enum": ["spatialtoolbox", "ws", "wss", "http", "https"]};
+            if(!schema.items.properties.query)  schema.items.properties.query = {"type": "string", "minLength": 0, "maxLength": 2000, "pattern": "^[A-Za-z0-9~!@$%^&*()-_=+|;:,.]"};
+            if(!schema.items.properties.server)  schema.items.properties.server = {"type": "string", "minLength": 0, "maxLength": 2000, "pattern": "^[A-Za-z0-9~!@$%^&*()-_=+|;:,.]"};
+            if(!schema.items.properties.route )  schema.items.properties.route = {"type": "string", "minLength": 0, "maxLength": 2000, "pattern": "^[A-Za-z0-9/~!@$%^&*()-_=+|;:,.]*$"};
             for(let i=0;i<urlSplit.length;i++) {
                 if (schema.items.expected.includes(urlSplit[i])) {
                     if (urlSplit[i + 1])
@@ -102,9 +117,11 @@ class ToolboxUtilities {
                 } else if(urlSplit[i]){route = route +'/'+urlSplit[i]}
             }
        }catch(e){return null}
-        if(querySplit[1]) res.query = querySplit[1]
+        if(querySplit) if(querySplit[1]) res.query = querySplit[1]
         if(route) res.route = route;
-        if(fileSplit.length > 1) res.type = fileSplit[fileSplit.length-1];
+        if(server) res.server = server;
+        if(protocol) res.protocol = protocol;
+        if(fileSplit) if(fileSplit.length > 1) res.type = fileSplit[fileSplit.length-1];
         if(this.validate(res,url.length,schema))
             return res;
         else
