@@ -1,18 +1,29 @@
-const ToolSocket = require("./index.js");
-let server = new ToolSocket.Io.Server({port: 123});
+const ToolSocket = require('./index.js');
+let enc = new TextEncoder()
+let dec = new TextDecoder()
+let ioServer = new ToolSocket.Io.Server({port: 12443});
 let io = new ToolSocket.Io();
-let client = io.connect("ws://localhost:123/n/xkjhasdflk");
+//let ioClient = io.connect("ws://localhost:12443/n/networkName");
 
-console.log(client.connected);
-
-client.on("connect", () => {
-    client.emit("/", "client says Hi");
-    client.on("/", (m) => console.log("client: ", m))
-    console.log(client.connected);
-})
-
-server.on('connection', (io) => {
-    io.on("/", (m) => console.log("server: ", m))
-    io.emit("/", "server says Hi");
-    console.log(io.connected)
+ioServer.on('connection', (io) => {
+    io.on("/", (m, d) => {
+        if(d.data)
+            console.log("IO server: ", m, dec.decode(d.data))
+        else
+            console.log("IO server: ", m)
+    })
+    io.emit("/", "IO text server", {data: enc.encode(" IO bin server")});
+    io.emit("/", "IO text server");
 });
+/*
+ioClient.on("connect", () => {
+    ioClient.emit("/", "IO text client", {data: enc.encode("client bin")});
+    ioClient.emit("/", "only IO text client");
+    ioClient.on("/", (m, d) => {
+        if(d.data)
+            console.log("IO server: ", m, dec.decode(d.data))
+        else
+            console.log("IO server: ", m)
+    })
+});
+*/

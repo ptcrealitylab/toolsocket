@@ -1,19 +1,19 @@
 const ToolSocket = require('./index.js');
-let client = new ToolSocket("ws://localhost:1234", "xkjhasdflk", "web");
-var server = new ToolSocket.Server({port: 1234})
+let client = new ToolSocket("ws://localhost:4321", "xkjhasdflk", "web");
+let server = new ToolSocket.Server({port: 4321})
 
 test('server & client connection test', done => {
     let string = "";
-    while(string.length<1000000){
-        string = string +"client";
-    }
+     while(string.length<1000000){
+         string = string +"client";
+     }
     let packageCount = 0;
     let packageRes = 0;
     let hello = false;
     let simple = false;
     client.on('open', function connection() {
         client.dataPackageSchema.items.properties.m.enum.map(method => {
-            if(method !== "res") {
+            if(method !== "res" && method !== "ping" && method !== "pong" ) {
                 packageCount++;
                 client[method]('/', 'hello', function (m) {
                     expect(m).toBe('hello');
@@ -21,13 +21,8 @@ test('server & client connection test', done => {
             }
         });
 
-        packageCount++;
-        client.post('/', string, function (m) {
-            expect(m).toBe('hello');
-        })
-
         client.dataPackageSchema.items.properties.m.enum.map(method => {
-            if(method !== "res") {
+            if(method !== "res" && method !== "ping" && method !== "pong" ) {
                 packageCount++;
                 client[method]('/x/', 'hello', function (m) {
                     expect(m).toBe('hola');
@@ -36,38 +31,38 @@ test('server & client connection test', done => {
         });
 
         client.dataPackageSchema.items.properties.m.enum.map(method => {
-            if(method !== "res") {
+            if(method !== "res" && method !== "ping" && method !== "pong" ) {
                 packageCount++;
                 client[method]('/y/', 'simple')
             }
         });
     })
     server.on('connection', function connection(ws) {
-        ws.io('/', 'hello');
+        ws.dataPackageSchema.items.properties.m.enum.map(method => {
+            if(method !== "res" && method !== "ping" && method !== "pong" ) {
+                ws.on(method, function (route, msg, res) {
+                    if (route === "action/ping") {
+                        packageRes++;
+                    }
+                    if (route === "/") {
+                        packageRes++;
+                        res.send('hello');
+                        hello = true;
+                    } else if (route === "/x/") {
+                        packageRes++;
+                        res.send('hola');
+                    } else if (route === "/y/") {
+                        packageRes++;
+                        expect(msg).toBe('simple');
+                        simple = true;
+                    }
 
-        client.dataPackageSchema.items.properties.m.enum.map(method => {
-            ws.on(method, function (route, msg, res) {
-                if(route === "action/ping"){
-                    packageRes++;
-                }
-                if(route === "/") {
-                    packageRes++;
-                    res.send('hello');
-                    hello = true;
-                }
-                else if(route === "/x/"){
-                    packageRes++;
-                    res.send('hola');
-                }
-                else if(route === "/y/"){
-                    packageRes++;
-                    expect(msg).toBe('simple');
-                    simple = true;
-                }
-
-            });
+                });
+            }
         });
+
         setTimeout(function(){
+           // console.log(JSON.stringify(client.packageCb))
             expect(Object.keys(client.packageCb).length).toBe(0);
             expect(packageCount).toBe(packageRes);
             expect(hello).toBe(true);
@@ -75,9 +70,74 @@ test('server & client connection test', done => {
             ws.close();
             client.close();
             done();
-        },500);
+        },300);
     });
 });
+test("testing IO compatibility", done => {
+    let enc = new TextEncoder()
+    let dec = new TextDecoder()
+    let ioServer = new ToolSocket.Io.Server({port: 4433});
+    let io = new ToolSocket.Io();
+    let ioClient = io.connect("ws://localhost:4433/n/xkjhasdflk");
+
+    ioClient.on("connect", () => {
+        ioClient.emit("/x", "/x client", {data: enc.encode("IO bin client")});
+        ioClient.on("/x", (m, d) =>
+        {
+          //  console.log("/x client: ", m, dec.decode(d.data))
+            expect(m).toBe('/x server');
+            expect(dec.decode(d.data)).toBe('IO bin server');
+        })
+
+        ioClient.emit("/no", "/no client",  enc.encode(" IO bin client"));
+        ioClient.on("/no", (m, d) =>
+        {
+            // should not be reached
+            expect(true).toBe(false);
+        });
+
+        ioClient.emit("/n", "/n client says Hi");
+        ioClient.on("/n", (m) => {
+            expect(m).toBe('/n server');
+        })
+        expect(ioClient.connected).toBe(true);
+       // console.log("client", ioClient.connected);
+    })
+
+    ioServer.on('connection', (ioSocket) => {
+        expect(ioSocket.id).toBe(2);
+
+        ioSocket.emit("/x", "/x server", {
+            data: enc.encode("IO bin server")
+        });
+        ioSocket.on("/x", (m, d) => {
+            expect(m).toBe('/x client');
+            expect(dec.decode(d.data)).toBe('IO bin client');
+        })
+
+        ioSocket.emit("/no", "/no server", enc.encode(" IO bin server"));
+        ioSocket.on("/no", (m, d) => {
+            // should never reach
+            expect(true).toBe(false);
+          //  console.log("/no server: ", m, dec.decode(d.data))
+        })
+
+        ioSocket.emit("/n", "/n server");
+        ioSocket.on("/n", (m) => {
+            expect(m).toBe('/n client says Hi');
+          //  console.log("/n server: ", m)
+        })
+        expect(ioSocket.connected).toBe(true);
+        //console.log("server", ioSocket.connected)
+
+        setTimeout(function(){
+            ioClient.close();
+            ioSocket.close();
+            done();
+        },300);
+    });
+})
+
 
 test('validate(): normal package validation', () => {
     client.dataPackageSchema.items.properties.o.enum.map(origin => {
@@ -236,8 +296,9 @@ test('server and client contain correct origins', () => {
   expect(client.origin).toBe('web');
 });
 
+/*
 afterAll(() => {
-  client.close();
-  server.server.close();
+  client.clos();
+ // server.server.close();
 
-});
+});*/
