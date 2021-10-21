@@ -157,14 +157,6 @@ ioServer.on('connection', function connection(socket) {
   // place your socket code here
 });
 ```
-
-
-const ToolSocket = require('./index.js');
-let enc = new TextEncoder()
-let dec = new TextDecoder()
-let ioServer = new ToolSocket.Io.Server({port: 12443});
-let io = new ToolSocket.Io();
-
 ### Initialize Server with HTTP
 ```javascript
 let ioServer = new ToolSocket.Io.Server({Server: http});
