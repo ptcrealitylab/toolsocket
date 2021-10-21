@@ -1,6 +1,8 @@
 const ToolSocket = require('./index.js');
 let client = new ToolSocket("ws://localhost:4321", "xkjhasdflk", "web");
 let server = new ToolSocket.Server({port: 4321})
+let ioServ = null;
+let ioCli = null;
 
 test('server & client connection test', done => {
     let string = "";
@@ -131,6 +133,8 @@ test("testing IO compatibility", done => {
         //console.log("server", ioSocket.connected)
 
         setTimeout(function(){
+            ioCli =ioClient;
+            ioServ = ioServer;
             ioClient.close();
             ioSocket.close();
             done();
@@ -296,9 +300,10 @@ test('server and client contain correct origins', () => {
   expect(client.origin).toBe('web');
 });
 
-/*
-afterAll(() => {
-  client.clos();
- // server.server.close();
 
-});*/
+afterAll(() => {
+  client.close();
+  server.server.close();
+  ioCli.close();
+  ioServ.server.close();
+});
