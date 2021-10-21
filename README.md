@@ -1,4 +1,5 @@
 ## ToolSocket
+#### For socket.io API compatibility scroll down!
 ToolSocket is a WebSocket server (nodejs only) and client for nodejs and browsers and a minimal but strict JSON Schema validator. The goal is to simplify real-time data communication.
 
 + It supports Req/Res, messages without acknowledgment, and in future Pub/Sub all via a single Websocket.
@@ -40,6 +41,11 @@ webSocketServer.on('connection', function connection(socket) {
 });
 ```
 
+### Initialize Server with HTTP
+```javascript
+let webSocketServer = new ToolSocket.Server({Server: http});
+```
+
 ### Initialize Client in Nodejs
 
 ```javascript
@@ -62,32 +68,35 @@ Network ID is like a Room that allows you to group messages by a specific Networ
 #### with req/res style callback
 ```javascript
 // with req/res call back
-let route = "/";
-let msg = "hello";
+let route = "/"; let msg = "hello"; let binaryData = {data: new TextEncoder().encode("binary")};
 socket.post(route, msg, function (msg) {
-    console.log(msg); // "hi"
-});
+        console.log(msg); // "hi"
+    }, 
+    binaryData //optional
+);
 ```
 #### message without acknowledgment 
 ```javascript
-let route = "/";
-let msg = "hello";
-socket.post(route, msg);
+let route = "/"; let msg = "hello"; let binaryData = {data: new TextEncoder().encode("binary")};
+socket.post(route, msg, null, binaryData); // binaryData Optional
 ```
 
 ### Receive a Message via the Socket
 #### with req/res style callback
 ```javascript
-socket.on('post', function (route, msg, res) {
+socket.on('post', function (route, msg, res, binary) {
     if(route === "/") {
         console.log(msg) // "hello"
-        res.send('hi');
+        if(binary.data) 
+            res.send('hi', binary); // binary is optional
+        else
+            res.send('hi'); 
     }
 }) 
 ``` 
 #### message without acknowledgment
 ```javascript
-socket.on('post', function (route, msg) {
+socket.on('post', function (route, msg, res, binary) {
     if(route === "/")
     console.log(msg) // "hello"
 }) 
@@ -125,9 +134,104 @@ socket.on('error', function open(e) {
 socket.on('connected', function open() {});
 
 ```
+## socket.io Compatibility
+ToolSocket.io is a socket.io API compatible server (nodejs only) and client for nodejs and browsers.
 
-### Setter 
+
+### install
+add the following to your package.json
+```json
+"dependencies":{
+  "toolsocket": "ptcrealitylab/toolsocket#main"
+}
+  ```
+`npm install`
+
+### Initialize Server
+```javascript
+const ToolSocket = require('toolsocket');
+let serverPort= 12345;
+let ioServer = new ToolSocket.Io.Server({port: 12443});
+
+ioServer.on('connection', function connection(socket) {
+  // place your socket code here
+});
+```
+
+
+const ToolSocket = require('./index.js');
+let enc = new TextEncoder()
+let dec = new TextDecoder()
+let ioServer = new ToolSocket.Io.Server({port: 12443});
+let io = new ToolSocket.Io();
+
+### Initialize Server with HTTP
+```javascript
+let ioServer = new ToolSocket.Io.Server({Server: http});
+ioServer.on('connection', (socket) => {
+    //socket code here
+});
+```
+
+### Initialize Client in Nodejs
+```javascript
+const ToolSocket = require('toolsocket');
+let io = new ToolSocket.Io();
+let socket = io.connect("ws://localhost:12443/n/networkName");
+```
+
+### Initialize Client in Web-Browser
+```html
+<script src="node_modules/toolsocket/index.js"></script>
+<script>
+    let socket = io.connect("ws://localhost:12443/n/networkName");
+</script>
+```
+Connecting to origin server works without any arguments:
+```html
+<script src="node_modules/toolsocket/index.js"></script>
+<script>
+    let socket = io.connect();
+</script>
+```
+
+### Send a Message via the Socket
+#### with req/res style callback
+```javascript
+// with req/res call back
+let title = "/";
+let msg = "hello"; 
+let binaryData = {data: new TextEncoder().encode("binary")};
+
+socket.emit(title, msg,binaryData); // binary optional
+```
+
+### Receive a Message via the Socket
+#### with req/res style callback
+```javascript
+let title = "/";
+socket.on(title , function (msg, binary) {
+        if(binary.data) 
+            console.log('hi', binary); // binary is optional
+        else
+            console.log('hi');
+}) 
+```
+### Setter
 
 ```javascript
 socket.close();
+```
+### Getters
+Get if the socked is connected
+```javascript
+socket.connected();
+```
+Each socket on the **server** has an id:
+```javascript
+socket.id
+```
+And the server has an object that stores all sockets.
+```javascript
+ioServer.sockets[socket.id]
 ```
