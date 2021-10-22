@@ -258,9 +258,11 @@ class MainToolboxSocket extends ToolboxUtilities {
         }
 
         this.routineIntervalRef = setInterval(function () {
-            if (this.readyState === this.CLOSED || !this.readyState)
-                if (!this.isServer)
+            if (this.readyState === this.CLOSED || !this.readyState) {
+                if (!this.isServer) {
                     this.connect(this.url, this.networkID, this.origin)
+                }
+            }
             for (let key in this.packageCb) {
                 if (this.timetoRequestPackage < (Date.now() - this.packageCb[key].time)) {
                     if (this.packageCb.hasOwnProperty(key)) {
@@ -361,7 +363,7 @@ class MainToolboxSocket extends ToolboxUtilities {
                 }
             }
         }
-        this.stateEmitter = (emitterString, statusID,) => {
+        this.stateEmitter = (emitterString, statusID) => {
             this.readyState = statusID;
             this.emitInt(emitterString, statusID);
             if (this.rsOld !== this.readyState) {
@@ -371,17 +373,23 @@ class MainToolboxSocket extends ToolboxUtilities {
         }
         this.attachEvents = () => {
             if(this.envNode){
-                this.socket.on('connected', () => { that.stateEmitter('connected', that.OPEN); });
-                this.socket.on('connecting', () => { that.stateEmitter('connecting', that.CONNECTING); });
+                this.socket.on('connected', () => {
+                    that.readyState = that.OPEN;
+                    that.stateEmitter('connected', that.OPEN); });
+                this.socket.on('connecting', () => {
+                    that.readyState = that.CONNECTING;
+                    that.stateEmitter('connecting', that.CONNECTING); });
             }
             this.socket.onclose = () => {
+                that.readyState = that.CLOSED;
                 that.stateEmitter('close', that.CLOSED);
                 this.closer();
             };
             this.socket.onopen = () => {
                 that.readyState = that.OPEN;
+                that.stateEmitter('open', that.OPEN);
                 that.pingInt();
-                that.stateEmitter('open', that.OPEN); };
+            };
             this.socket.onerror = (err) => { that.emitInt('error', err); };
 
             if(this.envNode) {
@@ -398,11 +406,12 @@ class MainToolboxSocket extends ToolboxUtilities {
                 this.socket.close();
                 clearInterval(this.routineIntervalRef);
                 clearInterval(this.netBeatIntervalRef);
+                this.removeAllListeners();
                 this.closer();
                 return "closed";
             }
             this.closer = () => {
-                this.removeAllListeners();
+
             }
         }
         this.on('ping', function (route,msg, res){
@@ -471,13 +480,13 @@ class MainIo extends ToolboxUtilities {
             return this.socket.close();
             clearInterval(this.routineIntervalRef);
             clearInterval(this.netBeatIntervalRef);
+            this.removeAllListeners();
             this.closer();
         }
         this.closer = () => {
             this.connected = false;
             if(this.sockets) if(this.sockets.connected) if(this.id) delete this.sockets.connected[this.id];
             this.emitInt('close');
-            this.removeAllListeners();
         }
     }
     connect (url, network, origin){
