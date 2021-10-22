@@ -338,10 +338,10 @@ class MainToolboxSocket extends ToolboxUtilities {
             if(objBin.bin) {
                 if (objBin.bin.data) {
                     this.socket.send(this.createBinary(objBin), {binary: true});
-                } else {
-                    this.socket.send(JSON.stringify(objBin.obj), {binary: false});
+                    return;
                 }
             }
+            this.socket.send(JSON.stringify(objBin.obj), {binary: false});
         }
         this.resend = (id) => {
             if (this.readyState !== this.OPEN) return;
