@@ -5,14 +5,36 @@ let ioServ = null;
 let ioCli = null;
 
 test('server & client connection test', done => {
-    let string = "";
-     while(string.length<1000000){
-         string = string +"client";
-     }
     let packageCount = 0;
     let packageRes = 0;
     let hello = false;
     let simple = false;
+
+    server.on('connection', function connection(ws) {
+        ws.dataPackageSchema.items.properties.m.enum.map(method => {
+            if(method !== "res" && method !== "ping" && method !== "pong" ) {
+                ws.on(method, function (route, msg, res) {
+                    if (route === "action/ping") {
+                        packageRes++;
+                    }
+                    if (route === "/") {
+                        packageRes++;
+                        res.send('hello');
+                        hello = true;
+                    } else if (route === "/x/") {
+                        packageRes++;
+                        res.send('hola');
+                    } else if (route === "/y/") {
+                        packageRes++;
+                        expect(msg).toBe('simple');
+                        simple = true;
+                    }
+
+                });
+            }
+        });
+
+
     client.on('open', function connection() {
         client.dataPackageSchema.items.properties.m.enum.map(method => {
             if(method !== "res" && method !== "ping" && method !== "pong" ) {
@@ -39,32 +61,8 @@ test('server & client connection test', done => {
             }
         });
     })
-    server.on('connection', function connection(ws) {
-        ws.dataPackageSchema.items.properties.m.enum.map(method => {
-            if(method !== "res" && method !== "ping" && method !== "pong" ) {
-                ws.on(method, function (route, msg, res) {
-                    if (route === "action/ping") {
-                        packageRes++;
-                    }
-                    if (route === "/") {
-                        packageRes++;
-                        res.send('hello');
-                        hello = true;
-                    } else if (route === "/x/") {
-                        packageRes++;
-                        res.send('hola');
-                    } else if (route === "/y/") {
-                        packageRes++;
-                        expect(msg).toBe('simple');
-                        simple = true;
-                    }
-
-                });
-            }
-        });
 
         setTimeout(function(){
-           // console.log(JSON.stringify(client.packageCb))
             expect(Object.keys(client.packageCb).length).toBe(0);
             expect(packageCount).toBe(packageRes);
             expect(hello).toBe(true);
@@ -72,9 +70,10 @@ test('server & client connection test', done => {
             ws.close();
             client.close();
             done();
-        },300);
+        },2000);
     });
 });
+
 test("testing IO compatibility", done => {
     let enc = new TextEncoder()
     let dec = new TextDecoder()
@@ -138,12 +137,11 @@ test("testing IO compatibility", done => {
             ioClient.close();
             ioSocket.close();
             done();
-        },300);
+        },2000);
     });
 })
 
-
-test('validate(): normal package validation', () => {
+test('validate(): normal package validation', done => {
     client.dataPackageSchema.items.properties.o.enum.map(origin => {
         client.dataPackageSchema.items.properties.m.enum.map(method => {
             expect(client.validate(new client.DataPackage(origin, "dklasdjd", method, "/", "{test:rest}", "2xsN"), 2000, client.dataPackageSchema)).toBe(true);
@@ -151,6 +149,7 @@ test('validate(): normal package validation', () => {
     });
     expect(client.validate(new client.DataPackage("client", "dklasdjd", "post", "/", "{test:rest}", null), 2000, client.dataPackageSchema)).toBe(true);
     expect(client.validate(new client.DataPackage("client", "dklasdjd", "post", "/", "{test:rest}", "0xNsd"), 2000, client.dataPackageSchema)).toBe(true);
+    done()
 });
 test('validate(): out of range ID validation', () => {
     var obj = new client.DataPackage("client", "dklasdjd", "post", "/", "{test:rest}", Number.MAX_SAFE_INTEGER+1);
@@ -222,37 +221,25 @@ test('validate(): out of range route validation', () => {
 test('validate(): body validation', () => {
     var obj = new client.DataPackage("client", "dklasdjd", "post", "/", 0, "1xaJk");
     expect(client.validate(obj, 2000, client.dataPackageSchema)).toBe(true);
-    var obj = new client.DataPackage("client", "dklasdjd", "post", "/", "''zwidugaodig826/%&(8758765", "1fdJ");
+     obj = new client.DataPackage("client", "dklasdjd", "post", "/", "''zwidugaodig826/%&(8758765", "1fdJ");
     expect(client.validate(obj, 2000, client.dataPackageSchema)).toBe(true);
-    var obj = new client.DataPackage("client", "dklasdjd", "post", "/", {test : 0}, "1djwH");
+     obj = new client.DataPackage("client", "dklasdjd", "post", "/", {test : 0}, "1djwH");
     expect(client.validate(obj, 2000, client.dataPackageSchema)).toBe(true);
-    var obj = new client.DataPackage("client", "dklasdjd", "post", "/", null, "1dshh");
+     obj = new client.DataPackage("client", "dklasdjd", "post", "/", null, "1dshh");
     expect(client.validate(obj, 2000, client.dataPackageSchema)).toBe(true);
-    var obj = new client.DataPackage("client", "dklasdjd", "post", "/", [0,1,4,2,4,5], "1sHs");
+     obj = new client.DataPackage("client", "dklasdjd", "post", "/", [0,1,4,2,4,5], "1sHs");
     expect(client.validate(obj, 2000, client.dataPackageSchema)).toBe(true);
 });
 
-test('validate(): out of range body validation', () => {
+test('validate(): out of range body validation', done => {
     let string = "";
     while(string.length<70000002){
-        string = string +"client";
+        string = string +"cl";
     }
-    obj = new client.DataPackage('client', "dklasdjd", "post", "/", string, "1dshh");
+    let obj = new client.DataPackage('client', "dklasdjd", "post", "/", string, "1dshh");
     expect(client.validate(obj, string.length, client.dataPackageSchema)).toBe(false);
 
-    let array = [];
-    while(string.length<70000002){
-        array.push("cl");
-    }
-    obj = new client.DataPackage('client', "dklasdjd", "post", "/", string, "1dshh");
-    expect(client.validate(obj, JSON.stringify(array).length, client.dataPackageSchema)).toBe(false);
-
-    let object = {};
-    for (let step = 0; step < 87500; step++) {
-        object[step] = "xl"
-    }
-    obj = new client.DataPackage('client', "dklasdjd", "post", "/", string, "1dshh");
-    expect(client.validate(obj, JSON.stringify(object).length, client.dataPackageSchema)).toBe(false);
+    done();
 });
 let jsonFromURLRouteSchema = {
     "type": "object",

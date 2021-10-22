@@ -145,7 +145,7 @@ class MainToolboxSocket extends ToolboxUtilities {
         let that = this;
         this.retryAmount = 5;
         this.timetoRequestPackage = 3000;
-        this.netBeatInterval = 1000;
+        this.netBeatInterval = 2000;
         this.networkID = networkID;
         this.url = url;
         this.origin = origin;
@@ -210,19 +210,29 @@ class MainToolboxSocket extends ToolboxUtilities {
             }
         }
         this.router = (msg) => {
+            let msgLength = 0;
             let objBin
-            try { objBin = this.readBinary(msg); if(objBin.bin.data) if(!objBin.bin.data.byteLength) objBin.bin.data = null;
-            } catch (e) { console.log('no json'); return; }
+                if(typeof msg !== "string") {
+                    objBin = this.readBinary(msg);
+                    msgLength = msg.byteLength;
+                    if (!objBin.bin.data.byteLength) {
+                        objBin.bin.data = null;
+                    }
+                } else {
+                    objBin = {obj: JSON.parse(msg), bin: {data: null}};
+                    msgLength = msg.length;
+                }
+
             // todo Needs some extra testing to check if the size limit works out.
-            let binaryLength = objBin.bin.data ? objBin.bin.data.byteLength : 0;
-            if(!objBin.obj) return; if(!objBin.obj.b) return;
-            if (!that.validate(objBin.obj, JSON.stringify(objBin.obj.b).length + binaryLength, this.dataPackageSchema)) {
+            if(typeof objBin.obj !== "object") return;
+            if(typeof objBin.obj.b === "undefined") return;
+
+            if (!that.validate(objBin.obj, msgLength, this.dataPackageSchema)) {
                // console.log(objBin.obj.r,"not allowed");
                 console.log("not allowed");
                 return;
             }
             if (objBin.obj.m === 'ping') {
-                that.send(new that.DataPackage(that.origin, objBin.obj.n, 'res', objBin.obj.r, 'pong', objBin.obj.i));
                 if (that.networkID !== objBin.obj.n) {
                     this.emitInt('network', objBin.obj.n, that.networkID, objBin.obj);
                     that.networkID = objBin.obj.n;
@@ -266,8 +276,8 @@ class MainToolboxSocket extends ToolboxUtilities {
             }
         }.bind(this), this.timetoRequestPackage);
 
-        this.message =  this.new =  this.delete = this.patch = this.io =
-            this.put = this.post = this.get = this.action = this.beat = (route, body, callback) => {};
+        this.message = this.new =this.delete = this.patch = this.io = this.put = this.post = this.get = this.action = this.beat = this.ping = (route, body, callback) => {};
+
         for (let value of this.dataPackageSchema.items.properties.m.enum) {
             this[value] = (route, body, callback, dataObject) => {
                 if(dataObject) {
@@ -311,14 +321,10 @@ class MainToolboxSocket extends ToolboxUtilities {
             }
         }
         this.readBinary =  (msgBuffer) =>{
-            if(typeof msgBuffer !== "string") {
                 let getJsonBufferLength = this.byteToInt(msgBuffer.slice(0, 4))
                 let resultJsonBuffer = JSON.parse(this.dec.decode(msgBuffer.slice(4, getJsonBufferLength + 4)))
                 let resultBinaryBuffer = msgBuffer.slice(getJsonBufferLength + 4, msgBuffer.byteLength);
                 return {obj: resultJsonBuffer, bin: {data: resultBinaryBuffer}};
-            } else {
-                return {obj: JSON.parse(msgBuffer), bin: {data: null}};
-            }
         }
 
         this.send = (objBin, callback) => {
@@ -372,7 +378,10 @@ class MainToolboxSocket extends ToolboxUtilities {
                 that.stateEmitter('close', that.CLOSED);
                 this.closer();
             };
-            this.socket.onopen = () => { that.ping(); that.stateEmitter('open', that.OPEN); };
+            this.socket.onopen = () => {
+                that.readyState = that.OPEN;
+                that.pingInt();
+                that.stateEmitter('open', that.OPEN); };
             this.socket.onerror = (err) => { that.emitInt('error', err); };
 
             if(this.envNode) {
@@ -387,28 +396,32 @@ class MainToolboxSocket extends ToolboxUtilities {
             }
             this.close = () => {
                 this.socket.close();
+                clearInterval(this.routineIntervalRef);
+                clearInterval(this.netBeatIntervalRef);
                 this.closer();
                 return "closed";
             }
             this.closer = () => {
-                clearInterval(this.routineIntervalRef);
-                clearInterval(this.netBeatIntervalRef);
                 this.removeAllListeners();
             }
         }
-        this.ping = () => {
-            let netBeatMsg = {obj: new that.DataPackage(this.origin, this.networkID, 'ping', 'action/ping', '')};
+        this.on('ping', function (route,msg, res){
+            res.send("pong");
+        })
+        this.pingInt = () => {
             if (that.readyState !== this.OPEN) {
                 that.readyState = that.CLOSED;
                 return;
             }
             try {
-                that.send(netBeatMsg, (msg) => {
-                    if (msg === 'pong' || msg === '')
-                        that.readyState = that.OPEN;
-                    else
-                        that.readyState = that.CLOSED;
-                })
+            this.ping('action/ping', 'ping', function (msg){
+                if (msg === 'pong') {
+                    that.emitInt("pong");
+                    that.readyState = that.OPEN;
+                }
+                else
+                    that.readyState = that.CLOSED;
+            })
             } catch (e) {
                 that.readyState = that.CLOSED;
                 console.log(e);
@@ -456,14 +469,14 @@ class MainIo extends ToolboxUtilities {
         this.socket.on('io', (route, msg, res, data) => { this.emitInt(route, msg, data)});
         this.close = () => {
             return this.socket.close();
+            clearInterval(this.routineIntervalRef);
+            clearInterval(this.netBeatIntervalRef);
             this.closer();
         }
         this.closer = () => {
             this.connected = false;
             if(this.sockets) if(this.sockets.connected) if(this.id) delete this.sockets.connected[this.id];
             this.emitInt('close');
-            clearInterval(this.routineIntervalRef);
-            clearInterval(this.netBeatIntervalRef);
             this.removeAllListeners();
         }
     }
@@ -521,7 +534,7 @@ class ToolSocket extends MainToolboxSocket {
 
         this.netBeatIntervalRef = setInterval(() => {
             if (that.readyState === that.OPEN)
-                that.ping();
+                that.pingInt();
         }, that.netBeatInterval);
 
         this.connect = (url, networkID, origin) => {
