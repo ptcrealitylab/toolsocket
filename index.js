@@ -201,8 +201,8 @@ class MainToolboxSocket extends ToolboxUtilities {
         this.Response = function (obj) {
             this.send = (res, data) => {
                 if (obj.i) {
-                    if(data) if(!data.data) { console.log("data object required {data: dataObject}"); return }
-                    let resObj = {obj: new that.DataPackage(that.origin, obj.n, 'res', obj.r, {}, obj.i), bin: {data: data}};
+                    if(data) {if(!data.data) { console.log("data object required {data: dataObject}"); return }} else data = null;
+                    let resObj = {obj: new that.DataPackage(that.origin, obj.n, 'res', obj.r, {}, obj.i), bin: data};
                     if (res) resObj.obj.b = res;
                     else resObj.obj.b = 204;
                     that.send(resObj, null);
@@ -303,11 +303,7 @@ class MainToolboxSocket extends ToolboxUtilities {
             let jsonBuffer = this.enc.encode(JSON.stringify(objBin.obj));
             if(this.envNode) {
                 let jsonBufferLength = Buffer.from(this.intToByte(jsonBuffer.byteLength));
-                if(objBin.bin) if(objBin.bin.data){
                     bytes = Buffer.concat([jsonBufferLength, jsonBuffer, objBin.bin.data]);
-                } else {
-                    bytes = Buffer.concat([jsonBufferLength, jsonBuffer]);
-                }
                 return bytes;
             } else {
                 let binaryBuffer = objBin.bin.data ? Uint8Array.from(objBin.bin.data) : null;
@@ -390,7 +386,6 @@ class MainToolboxSocket extends ToolboxUtilities {
                 that.stateEmitter('open', that.OPEN);
                 that.pingInt();
             };
-            this.socket.onerror = (err) => { that.emitInt('error', err); };
 
             if(this.envNode) {
                 this.socket.onmessage = (msg) => { that.router(msg.data)};
@@ -554,8 +549,10 @@ class ToolSocket extends MainToolboxSocket {
                 that.socket.close();
             }
             that.socket = new that.WebSocket(url);
+            that.socket.onerror = (err) => { that.emitInt('error', err); };
             that.readyState = that.CONNECTING;
-            this.attachEvents();
+            that.attachEvents();
+
         }
         // connect for the first time when opened.
         this.connect(this.url, this.networkID, this.origin);
