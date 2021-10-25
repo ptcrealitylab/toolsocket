@@ -564,9 +564,8 @@ class ToolSocket extends MainToolboxSocket {
             if(origin) this.origin = origin; else this.origin = "server";
             if (typeof window !== 'undefined') return;
             let that = this;
-            this.id = 1;
-            this.sockets = {
-                connected : {},
+            this.socketID = 1;
+            this.webSockets = {
             };
             console.log('ToolSocket Server Start')
             let WebSocket = require('ws');
@@ -585,14 +584,14 @@ class ToolSocket extends MainToolboxSocket {
                     }
                 }
 
-                if(this.id>= Number.MAX_SAFE_INTEGER) this.id = 1;
-                this.id++;
-                this.sockets.connected[this.id] = new Socket(socket);
-                this.sockets.connected[this.id].id = this.id+'';
-                this.emitInt('connection', this.sockets.connected[this.id], ...args);
+                if(this.socketID>= Number.MAX_SAFE_INTEGER) this.socketID = 1;
+                this.socketID++;
+                this.webSockets[this.socketID] = new Socket(socket);
+                this.webSockets[this.socketID].id = this.socketID+'';
+                that.emitInt('connection', this.webSockets[this.socketID], ...args);
 
                 // todo proxy origin from main class and parameters
-                that.emitInt('connection', new Socket(socket), ...args);
+              //  that.emitInt('connection', new Socket(socket), ...args);
             });
         };
     }
