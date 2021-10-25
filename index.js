@@ -402,6 +402,7 @@ class MainToolboxSocket extends ToolboxUtilities {
                 clearInterval(this.routineIntervalRef);
                 clearInterval(this.netBeatIntervalRef);
                 this.removeAllListeners();
+                if(this.sockets) if(this.sockets.connected) if(this.id) delete this.sockets.connected[this.id];
                 this.closer();
                 return "closed";
             }
@@ -563,6 +564,10 @@ class ToolSocket extends MainToolboxSocket {
             if(origin) this.origin = origin; else this.origin = "server";
             if (typeof window !== 'undefined') return;
             let that = this;
+            this.id = 1;
+            this.sockets = {
+                connected : {},
+            };
             console.log('ToolSocket Server Start')
             let WebSocket = require('ws');
             this.server = new WebSocket.Server(param);
@@ -579,6 +584,13 @@ class ToolSocket extends MainToolboxSocket {
                         this.attachEvents();
                     }
                 }
+
+                if(this.id>= Number.MAX_SAFE_INTEGER) this.id = 1;
+                this.id++;
+                this.sockets.connected[this.id] = new Socket(socket);
+                this.sockets.connected[this.id].id = this.id+'';
+                this.emitInt('connection', this.sockets.connected[this.id], ...args);
+
                 // todo proxy origin from main class and parameters
                 that.emitInt('connection', new Socket(socket), ...args);
             });
