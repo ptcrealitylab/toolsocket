@@ -106,7 +106,7 @@ test("testing IO compatibility", done => {
     })
 
     ioServer.on('connection', (ioSocket) => {
-        expect(ioSocket.id).toBe(2);
+        expect(ioSocket.id).toBe("2");
 
         ioSocket.emit("/x", "/x server", {
             data: enc.encode("IO bin server")

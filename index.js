@@ -616,7 +616,7 @@ class ToolSocket extends MainToolboxSocket {
                     if(this.id>= Number.MAX_SAFE_INTEGER) this.id = 1;
                     this.id++;
                     this.sockets.connected[this.id] = new Socket(socket);
-                    this.sockets.connected[this.id].id = this.id;
+                    this.sockets.connected[this.id].id = this.id+'';
                     this.emitInt('connection', this.sockets.connected[this.id], ...args);
                 });
             };
