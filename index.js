@@ -278,7 +278,7 @@ class MainToolboxSocket extends ToolboxUtilities {
             }
         }.bind(this), this.timetoRequestPackage);
 
-        this.message = this.new =this.delete = this.patch = this.io = this.put = this.post = this.get = this.action = this.beat = this.ping = (route, body, callback) => {};
+        this.message = this.new =this.delete = this.patch = this.io = this.put = this.post = this.get = this.action = this.keys = this.beat = this.ping = (route, body, callback) => {};
 
         for (let value of this.dataPackageSchema.items.properties.m.enum) {
             this[value] = (route, body, callback, dataObject) => {
