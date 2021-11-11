@@ -316,5 +316,5 @@ afterAll(() => {
   client.close();
   server.server.close();
   ioCli.close();
-  ioServ.server.close();
+  ioServ.server.server.close();
 });
