@@ -18,6 +18,7 @@ this.DataPackage = function (origin, network, method, route, body, id = null) {
     this.r = route; // Package route. Example "/boston/seaport/ptc"
     this.b = body; // Message body (object, array, number, string)
     this.s = null // (optional) Secret used to manage write access.
+    this.f = null // (optional) amount of binary buffers in array attached to a message
 };
 ````
 
@@ -72,13 +73,13 @@ let route = "/"; let msg = "hello"; let binaryData = {data: new TextEncoder().en
 socket.post(route, msg, function (msg) {
         console.log(msg); // "hi"
     }, 
-    binaryData //optional
+    binaryData // (optional) A single binary buffer or multiple binary buffers in an array.
 );
 ```
 #### message without acknowledgment 
 ```javascript
 let route = "/"; let msg = "hello"; let binaryData = {data: new TextEncoder().encode("binary")};
-socket.post(route, msg, null, binaryData); // binaryData Optional
+socket.post(route, msg, null, binaryData); // (optional) binaryData: A single binary buffer or multiple binary buffers in an array.
 ```
 
 ### Receive a Message via the Socket
@@ -88,7 +89,7 @@ socket.on('post', function (route, msg, res, binary) {
     if(route === "/") {
         console.log(msg) // "hello"
         if(binary.data) 
-            res.send('hi', binary); // binary is optional
+            res.send('hi', binary); // (optional) binary: A single binary buffer or multiple binary buffers in an array.
         else
             res.send('hi'); 
     }
@@ -195,7 +196,7 @@ let title = "/";
 let msg = "hello"; 
 let binaryData = {data: new TextEncoder().encode("binary")};
 
-socket.emit(title, msg,binaryData); // binary optional
+socket.emit(title, msg,binaryData); // (optional) binary: A single binary buffer or multiple binary buffers in an array.
 ```
 
 ### Receive a Message via the Socket
@@ -204,7 +205,7 @@ socket.emit(title, msg,binaryData); // binary optional
 let title = "/";
 socket.on(title , function (msg, binary) {
         if(binary.data) 
-            console.log('hi', binary); // binary is optional
+            console.log('hi', binary); // (optional) binary: A single binary buffer or multiple binary buffers in an array.
         else
             console.log('hi');
 }) 
