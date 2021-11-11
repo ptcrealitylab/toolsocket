@@ -90,6 +90,18 @@ test("testing IO compatibility", done => {
             expect(dec.decode(d.data)).toBe('IO bin server');
         })
 
+        ioClient.emit("/binArray", "/binArray client", {data:[enc.encode("IO_00 bin client"), enc.encode("IO_01 bin client"), enc.encode("IO_02 bin client"), enc.encode("IO_03 bin client")]});
+        ioClient.on("/binArray", (m, d) =>
+        {
+            //  console.log("/x client: ", m, dec.decode(d.data))
+            expect(m).toBe('/binArray server');
+            expect(dec.decode(d.data[0])).toBe('IO_00 bin server');
+            expect(dec.decode(d.data[1])).toBe('IO_01 bin server');
+            expect(dec.decode(d.data[2])).toBe('IO_02 bin server');
+            expect(dec.decode(d.data[3])).toBe('IO_03 bin server');
+        })
+
+
         ioClient.emit("/no", "/no client",  enc.encode(" IO bin client"));
         ioClient.on("/no", (m, d) =>
         {
@@ -115,6 +127,17 @@ test("testing IO compatibility", done => {
         ioSocket.on("/x", (m, d) => {
             expect(m).toBe('/x client');
             expect(dec.decode(d.data)).toBe('IO bin client');
+        })
+
+        ioSocket.emit("/binArray", "/binArray server", {
+            data: [enc.encode("IO_00 bin server"), enc.encode("IO_01 bin server"), enc.encode("IO_02 bin server"), enc.encode("IO_03 bin server")]
+        });
+        ioSocket.on("/binArray", (m, d) => {
+            expect(m).toBe('/binArray client');
+            expect(dec.decode(d.data[0])).toBe('IO_00 bin client');
+            expect(dec.decode(d.data[1])).toBe('IO_01 bin client');
+            expect(dec.decode(d.data[2])).toBe('IO_02 bin client');
+            expect(dec.decode(d.data[3])).toBe('IO_03 bin client');
         })
 
         ioSocket.emit("/no", "/no server", enc.encode(" IO bin server"));

@@ -158,6 +158,8 @@ class MainToolboxSocket extends ToolboxUtilities {
         this.rsOld = null;
         this.packageID = 0;
         this.packageCb = {};
+        this.binaryBuffer = [];
+        this.bufferLength = 0;
         this.routineIntervalRef = null;
         this.netBeatIntervalRef = null;
         this.envNode = (typeof window === 'undefined');
@@ -193,7 +195,8 @@ class MainToolboxSocket extends ToolboxUtilities {
                     "m": {"type": "string", "minLength": 1, "maxLength": 10, "enum": ["beat", "action", "ping", "get", "post", "put", "patch", "delete", "new", "unsub", "sub", "pub", "message", "io", "res", "keys"]},
                     "r": {"type": "string", "minLength": 0, "maxLength": 2000, "pattern": "^[A-Za-z0-9_/?:&+.%=-]*$"},
                     "b": {"type": ["boolean", "array", "number", "string", "object"], "minLength": 0, "maxLength": 70000000},
-                    "s": {"type": ["string", "null", "undefined"], "minLength": 0, "maxLength": 45, "pattern": "^[A-Za-z0-9_]*$"}
+                    "s": {"type": ["string", "null", "undefined"], "minLength": 0, "maxLength": 45, "pattern": "^[A-Za-z0-9_]*$"},
+                    "f": {"type": ["number", "null", "undefined"], "min": 1, "max": 99},
                 },
                 "required": ["i", "o", "n", "m", "r", "b"]
             }
@@ -209,18 +212,39 @@ class MainToolboxSocket extends ToolboxUtilities {
                 }
             }
         }
+
         this.router = (msg) => {
             let msgLength = 0;
-            let objBin
+            let objBin = {obj: {}, bin: {}};
                 if(typeof msg !== "string") {
-                    objBin = this.readBinary(msg);
-                    msgLength = msg.byteLength;
-                    if (!objBin.bin.data.byteLength) {
-                        objBin.bin.data = null;
+                    if(this.bufferLength){
+                        this.binaryBuffer.push(msg);
+                        if(this.binaryBuffer.length <= this.bufferLength) return;
+                        objBin.obj = this.binaryBuffer[0];
+                        objBin.bin.data = [];
+                        for (let i = 1; i < this.binaryBuffer.length; i++) {
+                            objBin.bin.data.push(this.binaryBuffer[i]);
+                        }
+                        this.bufferLength = 0;
+                        this.binaryBuffer = [];
+                        msgLength = this.binaryBuffer.byteLength;
+                    } else {
+                        objBin = this.readBinary(msg);
+                        msgLength = msg.byteLength;
+                        if (!objBin.bin.data.byteLength) {
+                            objBin.bin.data = null;
+                        }
                     }
-                } else {
+                }
+                else {
                     objBin = {obj: JSON.parse(msg), bin: {data: null}};
                     msgLength = msg.length;
+                    if(objBin.obj.f){
+                        this.binaryBuffer = [];
+                        this.bufferLength = objBin.obj.f
+                        this.binaryBuffer.push(objBin.obj);
+                        return;
+                    }
                 }
 
             // todo Needs some extra testing to check if the size limit works out.
@@ -341,18 +365,36 @@ class MainToolboxSocket extends ToolboxUtilities {
             }
             if(objBin.bin) {
                 if (objBin.bin.data) {
-                    this.socket.send(this.createBinary(objBin), {binary: true});
+                    if(Array.isArray(objBin.bin.data)){
+                        objBin.obj.f = objBin.bin.data.length;
+                        this.socket.send(JSON.stringify(objBin.obj), {binary: false});
+                        for (let i = 0; i < objBin.bin.data.length; i++) {
+                            this.socket.send(objBin.bin.data[i], {binary: true});
+                        }
+                    } else {
+                        this.socket.send(this.createBinary(objBin), {binary: true});
+                    }
                     return;
                 }
             }
+            objBin.obj.f = null;
             this.socket.send(JSON.stringify(objBin.obj), {binary: false});
         }
         this.resend = (id) => {
             if (this.readyState !== this.OPEN) return;
             if (this.packageCb.hasOwnProperty(id)) {
                 if(this.packageCb[id].objBin.bin) {
-                    if (this.packageCb[id].objBin.bin.data)
-                        this.socket.send(this.createBinary(this.packageCb[id].objBin), {binary: true});
+                    if (this.packageCb[id].objBin.bin.data) {
+                            if(Array.isArray(this.packageCb[id].objBin.bin.data)){
+                                this.packageCb[id].objBin.obj.f = this.packageCb[id].objBin.bin.data.length;
+                                this.socket.send(JSON.stringify(this.packageCb[id].objBin.obj), {binary: false});
+                                for (let i = 0; i < this.packageCb[id].objBin.bin.data.length; i++) {
+                                    this.socket.send(this.packageCb[id].objBin.bin.data[i], {binary: true});
+                                }
+                            } else {
+                                this.socket.send(this.createBinary(this.packageCb[id].objBin), {binary: true});
+                            }
+                    }
                     else {
                         this.socket.send(JSON.stringify(this.packageCb[id].objBin.obj), {binary: false});
                     }
