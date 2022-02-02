@@ -451,6 +451,8 @@ class MainToolboxSocket extends ToolboxUtilities {
                 this.socket.close();
                 clearInterval(this.routineIntervalRef);
                 clearInterval(this.netBeatIntervalRef);
+                this.routineIntervalRef = null;
+                this.netBeatIntervalRef = null;
                 this.removeAllListeners();
                 if (this.sockets) if (this.sockets.connected) if (this.id) delete this.sockets.connected[this.id];
                 this.closer();
@@ -523,10 +525,7 @@ class MainIo extends ToolboxUtilities {
         this.socket.on('error', (err) => { this.emitInt('error', err);  });
         this.socket.on('io', (route, msg, res, data) => { this.emitInt(route, msg, data);});
         this.close = () => {
-            console.log('YES COVER');
             this.socket.close();
-            clearInterval(this.routineIntervalRef);
-            clearInterval(this.netBeatIntervalRef);
             this.removeAllListeners();
             this.closer();
         };
@@ -582,7 +581,8 @@ class ToolSocket extends MainToolboxSocket {
         this.WebSocket = null;
         this.socket = null;
         if (typeof window === 'undefined') {
-            this.WebSocket = require('ws'); this.envNode = true;
+            this.WebSocket = require('ws');
+            this.envNode = true;
         } else if (typeof WebSocket !== 'undefined') {
             this.WebSocket = WebSocket;
         } else if (typeof MozWebSocket !== 'undefined') {
