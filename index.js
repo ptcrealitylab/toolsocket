@@ -10,8 +10,6 @@
 /**
  * Refactor out parsing, all classes (cbobj, cbsub, DataPackage, Socket), the WebSocket polyfill
  * add failure reasons to validation
- * structure properly as classes
- * format consistently with gateway
  */
 
 class ToolboxUtilities {
