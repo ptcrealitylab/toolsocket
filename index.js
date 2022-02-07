@@ -13,11 +13,18 @@
  * structure properly as classes
  * format consistently with gateway
  */
+
 class ToolboxUtilities {
     constructor() {
         this.eCb = {};
-        this.dec = new TextDecoder();
-        this.enc = new TextEncoder();
+        if (typeof TextDecoder === 'undefined' && typeof require !== 'undefined') {
+            let util = require('util');
+            this.dec = new util.TextDecoder();
+            this.enc = new util.TextEncoder();
+        } else {
+            this.dec = new TextDecoder();
+            this.enc = new TextEncoder();
+        }
     }
 
     on(e, ...args) {
