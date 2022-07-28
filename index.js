@@ -269,15 +269,30 @@ function ToolboxUtilities_uuidShort(length) {
     return uuid;
 }
 
+function ToolboxUtilities_addSearchParams(baseURL, params = {}) {
+    if (!baseURL) {
+        return baseURL;
+    }
+    const url = new URL(baseURL);
+    const search = new URLSearchParams(url.search);
+
+    return new URL(
+        `${url.origin}${url.pathname}?${new URLSearchParams([
+            ...Array.from(search.entries()),
+            ...Object.entries(params),
+        ]).toString()}`
+    );
+}
+
 class MainToolboxSocket extends ToolboxUtilities {
-    constructor(url, networkID, origin) {
+    constructor(baseURL, networkID, origin) {
         super();
         let that = this;
         this.retryAmount = 5;
         this.timetoRequestPackage = 3000;
         this.netBeatInterval = 2000;
         this.networkID = networkID;
-        this.url = url;
+        this.url = ToolboxUtilities_addSearchParams(baseURL, {networkID});
         this.origin = origin;
         this.CONNECTING = 0;
         this.OPEN = 1;
