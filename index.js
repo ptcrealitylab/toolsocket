@@ -211,7 +211,7 @@ function ToolboxUtilities_parseUrl(url, schema) {
         }
     }
     try {
-        if (!schema.items.properties.type) schema.items.properties.type = {"type": "string", "minLength": 1, "maxLength": 5, "enum": ["jpg", "jpeg", "gif", "zip", "glb", "html", "map", "htm", "xml", "dat", "png", "js", "json", "obj", "fbx", "svg", "mp4", "pdf", "csv", "css", "woff", "otf", "webm", "webp", "ttf"]};
+        if (!schema.items.properties.type) schema.items.properties.type = {"type": "string", "minLength": 1, "maxLength": 5, "enum": ["jpg", "jpeg", "gif", "zip", "glb", "html", "map", "htm", "xml", "dat", "png", "js", "json", "obj", "fbx", "svg", "mp4", "pdf", "csv", "css", "woff", "otf", "webm", "webp", "ttf", "wasm"]};
         if (!schema.items.properties.protocol) schema.items.properties.protocol = {"type": "string", "minLength": 1, "maxLength": 20, "enum": ["spatialtoolbox", "ws", "wss", "http", "https"]};
         if (!schema.items.properties.query) schema.items.properties.query = {"type": "string", "minLength": 0, "maxLength": 2000, "pattern": "^[A-Za-z0-9~!@$%^&*()-_=+{}|;:,./?]*$"};
         if (!schema.items.properties.route )  schema.items.properties.route = {"type": "string", "minLength": 0, "maxLength": 2000, "pattern": "^[A-Za-z0-9/~!@$%^&*()-_=+|;:,.]*$"};
