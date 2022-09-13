@@ -300,7 +300,6 @@ class MainToolboxSocket extends ToolboxUtilities {
         this.CLOSED = 3;
         this.id = 0;
         this.readyState = 3;
-        this.rsOld = null;
         this.packageID = 0;
         this.packageCb = {};
         this.binaryBuffer = [];
@@ -561,11 +560,11 @@ class MainToolboxSocket extends ToolboxUtilities {
         };
 
         this.stateEmitter = (emitterString, statusID) => {
+            const rsOld = this.readyState;
             this.readyState = statusID;
             this.emitInt(emitterString, statusID);
-            if (this.rsOld !== this.readyState) {
+            if (rsOld !== this.readyState) {
                 this.emitInt('status', this.readyState);
-                this.rsOld = this.readyState;
             }
         };
         this.attachEvents = () => {
