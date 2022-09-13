@@ -526,6 +526,24 @@ class MainToolboxSocket extends ToolboxUtilities {
             } else if (objBin.obj.m !== 'res') {
                 objBin.obj.i = null;
             }
+            this.sendObjBinImpl(objBin);
+        };
+        this.resend = (id) => {
+            if (this.readyState !== this.OPEN) {
+                return;
+            }
+
+            if (this.packageCb.hasOwnProperty(id) && this.packageCb[id].objBin) {
+                this.sendObjBinImpl(this.packageCb[id].objBin);
+            }
+        };
+
+        /**
+         * Internal implementation of sending an objBin over the socket
+         * Sets `f` to be the number of following binary frames or null
+         * @param {any} objBin
+         */
+        this.sendObjBinImpl = (objBin) => {
             if (objBin.bin && objBin.bin.data) {
                 if (Array.isArray(objBin.bin.data)) {
                     objBin.obj.f = objBin.bin.data.length;
@@ -536,32 +554,12 @@ class MainToolboxSocket extends ToolboxUtilities {
                 } else {
                     this.socket.send(this.createBinary(objBin), {binary: true});
                 }
-                return;
+            } else {
+                objBin.obj.f = null;
+                this.socket.send(JSON.stringify(objBin.obj), {binary: false});
             }
-            objBin.obj.f = null;
-            this.socket.send(JSON.stringify(objBin.obj), {binary: false});
         };
-        this.resend = (id) => {
-            if (this.readyState !== this.OPEN) {
-                return;
-            }
 
-            if (this.packageCb.hasOwnProperty(id) && this.packageCb[id].objBin.bin) {
-                if (this.packageCb[id].objBin.bin.data) {
-                    if (Array.isArray(this.packageCb[id].objBin.bin.data)) {
-                        this.packageCb[id].objBin.obj.f = this.packageCb[id].objBin.bin.data.length;
-                        this.socket.send(JSON.stringify(this.packageCb[id].objBin.obj), {binary: false});
-                        for (let i = 0; i < this.packageCb[id].objBin.bin.data.length; i++) {
-                            this.socket.send(this.packageCb[id].objBin.bin.data[i], {binary: true});
-                        }
-                    } else {
-                        this.socket.send(this.createBinary(this.packageCb[id].objBin), {binary: true});
-                    }
-                } else {
-                    this.socket.send(JSON.stringify(this.packageCb[id].objBin.obj), {binary: false});
-                }
-            }
-        };
         this.stateEmitter = (emitterString, statusID) => {
             this.readyState = statusID;
             this.emitInt(emitterString, statusID);
