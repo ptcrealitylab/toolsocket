@@ -356,7 +356,8 @@ test('parseJsonFromUrl(): validation', () => {
         n: "S5ThIachqpzVUtDXiqsR",
         route: "/stable/s/hguD34bv6umfS6Caxowb6JLeNXmMHQvNvkHniehI",
         server: "toolboxedge.net",
-        protocol: "wss"
+        protocol: "wss",
+        port: 443,
     });
 
     url = 'wss://toolboxedge.net:443/n/S5ThIachqpzVUtDXiqsR/i/GX30WGI92RZJppI/s/hguD34bv6umfS6Caxowb6JLeNXmMHQvNvkHniehI';

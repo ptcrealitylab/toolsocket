@@ -197,8 +197,15 @@ function ToolboxUtilities_parseUrl(url, schema) {
         server = serverSplit[0];
         if (serverSplit[1]) {
             port = parseInt(Number(serverSplit[1]));
+        } else {
+            if (protocol === 'https' || protocol === 'wss') {
+                port = 443;
+            } else if (protocol === 'http' || protocol === 'ws') {
+                port = 80;
+            }
         }
     }
+
     let res = {};
     let route = "";
     let querySplit = [];
