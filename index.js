@@ -718,12 +718,23 @@ class MainIo extends ToolboxUtilities {
                 protocol: location.protocol,
                 ws: "ws://"
             };
+            let portAddition = ':' + proxy.port;
+            if (!proxy.port) {
+                portAddition = '';
+            }
+
             if (proxy.protocol === 'https:') {
                 proxy.ws = 'wss://';
             } else if (proxy.protocol === 'http:') {
                 proxy.ws = 'ws://';
             }
-            url = proxy.ws + proxy.ip + ':' + proxy.port + proxy.route;
+
+            if (proxy.port === '80' && proxy.ws === 'ws://') {
+                portAddition = '';
+            } else if (proxy.port === '443' && proxy.ws === 'wss://') {
+                portAddition = '';
+            }
+            url = proxy.ws + proxy.ip + portAddition + proxy.route;
         }
         if (url.indexOf("http") === 0) {
             url = url.replace('http', 'ws');
