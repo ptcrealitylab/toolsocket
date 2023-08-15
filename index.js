@@ -893,5 +893,8 @@ if (typeof window === 'undefined') {
     module.exports.validate = ToolboxUtilities_validate;
     module.exports.parseUrl = ToolboxUtilities_parseUrl;
 } else {
+    if (window.io) {
+        window._oldIo = window.io;
+    }
     window.io = new ToolSocket.Io();
 }
