@@ -181,25 +181,25 @@ function ToolboxUtilities_validate(obj, msgLength, schema) {
  * @return {boolean} whether valid
  */
 function ToolboxUtilities_parseUrl(url, schema) {
-    let urlProtocol = url.split("://"); // https, alpha.toolboxedge.net/n/1vfg7mfUcG2A5tPK1wzT/i/xXGSt2HS6KpNPUI4/s/mYMKKwgpTLnlVAzlGaIO0nmvoBjIwRNaq2ISdyHi/proxy/https%3A%2F%2Fcad%2eonshape%2ecom%2Fapi%2Fdocuments%3FownerType%3D1%26sortColumn%3DmodifiedAt%26offset%3D0
+    let urlProtocol = url.split("://");
     let protocol = null;
     let server = null;
     let port = null;
     if (urlProtocol && urlProtocol[1]) {
-        url = urlProtocol[1]; // alpha.toolboxedge.net/n/1vfg7mfUcG2A5tPK1wzT/i/xXGSt2HS6KpNPUI4/s/mYMKKwgpTLnlVAzlGaIO0nmvoBjIwRNaq2ISdyHi/proxy/https%3A%2F%2Fcad%2eonshape%2ecom%2Fapi%2Fdocuments%3FownerType%3D1%26sortColumn%3DmodifiedAt%26offset%3D0
-        protocol = urlProtocol[0]; // https
+        url = urlProtocol[1];
+        protocol = urlProtocol[0];
     }
-    let urlSplit = url.split("/"); // alpha.toolboxedge.net, n, 1vfg7mfUcG2A5tPK1wzT, i, xXGSt2HS6KpNPUI4, s, mYMKKwgpTLnlVAzlGaIO0nmvoBjIwRNaq2ISdyHi, proxy, https%3A%2F%2Fcad.onshape.com%2Fapi%2Fdocuments%3FownerType%3D1%26sortColumn%3DmodifiedAt%26offset%3D0
+    let urlSplit = url.split("/");
     if (protocol) {
-        server = urlSplit[0]; // alpha.toolboxedge.net
-        urlSplit.shift(); // n, 1vfg7mfUcG2A5tPK1wzT, i, xXGSt2HS6KpNPUI4, s, mYMKKwgpTLnlVAzlGaIO0nmvoBjIwRNaq2ISdyHi, proxy, https%3A%2F%2Fcad.onshape.com%2Fapi%2Fdocuments%3FownerType%3D1%26sortColumn%3DmodifiedAt%26offset%3D0
-        let serverSplit = server.split(":"); // alpha.toolboxedge.net
-        server = serverSplit[0]; // alpha.toolboxedge.net
+        server = urlSplit[0];
+        urlSplit.shift();
+        let serverSplit = server.split(":");
+        server = serverSplit[0];
         if (serverSplit[1]) {
             port = parseInt(Number(serverSplit[1]));
         } else {
             if (protocol === 'https' || protocol === 'wss') {
-                port = 443; // 443
+                port = 443;
             } else if (protocol === 'http' || protocol === 'ws') {
                 port = 80;
             }
@@ -210,7 +210,7 @@ function ToolboxUtilities_parseUrl(url, schema) {
     let res = {};
     let route = "";
     let querySplit = [];
-    if (urlSplit[urlSplit.length - 1]) querySplit = urlSplit[urlSplit.length - 1].split("?"); // https%3A%2F%2Fcad.onshape.com%2Fapi%2Fdocuments%3FownerType%3D1%26sortColumn%3DmodifiedAt%26offset%3D0
+    if (urlSplit[urlSplit.length - 1]) querySplit = urlSplit[urlSplit.length - 1].split("?");
     let fileSplit = null;
     if (querySplit) if (querySplit[0]) {
         if (querySplit[0].split(".").some(part => fileEnum.includes(part))) { // Treat non-file segments as paths, such as in proxy urls
