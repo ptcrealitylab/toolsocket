@@ -181,44 +181,47 @@ function ToolboxUtilities_validate(obj, msgLength, schema) {
  * @return {boolean} whether valid
  */
 function ToolboxUtilities_parseUrl(url, schema) {
-    let urlProtocol = url.split("://");
+    let urlProtocol = url.split("://"); // https, alpha.toolboxedge.net/n/1vfg7mfUcG2A5tPK1wzT/i/xXGSt2HS6KpNPUI4/s/mYMKKwgpTLnlVAzlGaIO0nmvoBjIwRNaq2ISdyHi/proxy/https%3A%2F%2Fcad%2eonshape%2ecom%2Fapi%2Fdocuments%3FownerType%3D1%26sortColumn%3DmodifiedAt%26offset%3D0
     let protocol = null;
     let server = null;
     let port = null;
     if (urlProtocol && urlProtocol[1]) {
-        url = urlProtocol[1];
-        protocol = urlProtocol[0];
+        url = urlProtocol[1]; // alpha.toolboxedge.net/n/1vfg7mfUcG2A5tPK1wzT/i/xXGSt2HS6KpNPUI4/s/mYMKKwgpTLnlVAzlGaIO0nmvoBjIwRNaq2ISdyHi/proxy/https%3A%2F%2Fcad%2eonshape%2ecom%2Fapi%2Fdocuments%3FownerType%3D1%26sortColumn%3DmodifiedAt%26offset%3D0
+        protocol = urlProtocol[0]; // https
     }
-    let urlSplit = url.split("/");
+    let urlSplit = url.split("/"); // alpha.toolboxedge.net, n, 1vfg7mfUcG2A5tPK1wzT, i, xXGSt2HS6KpNPUI4, s, mYMKKwgpTLnlVAzlGaIO0nmvoBjIwRNaq2ISdyHi, proxy, https%3A%2F%2Fcad.onshape.com%2Fapi%2Fdocuments%3FownerType%3D1%26sortColumn%3DmodifiedAt%26offset%3D0
     if (protocol) {
-        server = urlSplit[0];
-        urlSplit.shift();
-        let serverSplit = server.split(":");
-        server = serverSplit[0];
+        server = urlSplit[0]; // alpha.toolboxedge.net
+        urlSplit.shift(); // n, 1vfg7mfUcG2A5tPK1wzT, i, xXGSt2HS6KpNPUI4, s, mYMKKwgpTLnlVAzlGaIO0nmvoBjIwRNaq2ISdyHi, proxy, https%3A%2F%2Fcad.onshape.com%2Fapi%2Fdocuments%3FownerType%3D1%26sortColumn%3DmodifiedAt%26offset%3D0
+        let serverSplit = server.split(":"); // alpha.toolboxedge.net
+        server = serverSplit[0]; // alpha.toolboxedge.net
         if (serverSplit[1]) {
             port = parseInt(Number(serverSplit[1]));
         } else {
             if (protocol === 'https' || protocol === 'wss') {
-                port = 443;
+                port = 443; // 443
             } else if (protocol === 'http' || protocol === 'ws') {
                 port = 80;
             }
         }
     }
 
+    const fileEnum = ["jpg", "jpeg", "gif", "zip", "glb", "html", "map", "htm", "xml", "dat", "png", "js", "json", "obj", "fbx", "svg", "mp4", "pdf", "csv", "css", "woff", "otf", "webm", "webp", "ttf", "wasm"];
     let res = {};
     let route = "";
     let querySplit = [];
-    if (urlSplit[urlSplit.length - 1]) querySplit = urlSplit[urlSplit.length - 1].split("?");
+    if (urlSplit[urlSplit.length - 1]) querySplit = urlSplit[urlSplit.length - 1].split("?"); // https%3A%2F%2Fcad.onshape.com%2Fapi%2Fdocuments%3FownerType%3D1%26sortColumn%3DmodifiedAt%26offset%3D0
     let fileSplit = null;
     if (querySplit) if (querySplit[0]) {
-        fileSplit = querySplit[0].split(".");
+        if (querySplit[0].split(".").some(part => fileEnum.includes(part))) { // Treat non-file segments as paths, such as in proxy urls
+            fileSplit = querySplit[0].split(".");
+        }
         if (querySplit[1]) {
             urlSplit[urlSplit.length - 1] = querySplit[0];
         }
     }
     try {
-        if (!schema.items.properties.type) schema.items.properties.type = {"type": "string", "minLength": 1, "maxLength": 5, "enum": ["jpg", "jpeg", "gif", "zip", "glb", "html", "map", "htm", "xml", "dat", "png", "js", "json", "obj", "fbx", "svg", "mp4", "pdf", "csv", "css", "woff", "otf", "webm", "webp", "ttf", "wasm"]};
+        if (!schema.items.properties.type) schema.items.properties.type = {"type": "string", "minLength": 1, "maxLength": 5, "enum": fileEnum};
         if (!schema.items.properties.protocol) schema.items.properties.protocol = {"type": "string", "minLength": 1, "maxLength": 20, "enum": ["spatialtoolbox", "ws", "wss", "http", "https"]};
         if (!schema.items.properties.query) schema.items.properties.query = {"type": "string", "minLength": 0, "maxLength": 2000, "pattern": "^[A-Za-z0-9~!@$%^&*()-_=+{}|;:,./?]*$"};
         if (!schema.items.properties.route )  schema.items.properties.route = {"type": "string", "minLength": 0, "maxLength": 2000, "pattern": "^[A-Za-z0-9/~!@$%^&*()-_=+|;:,.]*$"};
