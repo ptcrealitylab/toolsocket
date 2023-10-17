@@ -472,7 +472,7 @@ class MainToolboxSocket extends ToolboxUtilities {
         for (let value of this.dataPackageSchema.items.properties.m.enum) {
             this[value] = (route, body, callback, dataObject) => {
                 if (dataObject) {
-                    if (!dataObject.data) {
+                    if (!dataObject.data && dataObject.data !== null) {
                         console.log("your binary must be a data object {data: binaryData}");
                         return;
                     }
