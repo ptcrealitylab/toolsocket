@@ -783,6 +783,9 @@ class ToolSocket extends MainToolboxSocket {
             console.log("websocket not available");
             return;
         }
+        if (typeof this.WebSocket !== 'function') {
+            console.warn('Unable to initialize WebSocket', {ws: this.WebSocket});
+        }
 
         this.netBeatIntervalRef = setInterval(() => {
             if (this.readyState === this.OPEN)
