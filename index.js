@@ -473,7 +473,7 @@ class MainToolboxSocket extends ToolboxUtilities {
             this[value] = (route, body, callback, dataObject) => {
                 if (dataObject) {
                     if (!dataObject.data && dataObject.data !== null) {
-                        console.log("your binary must be a data object {data: binaryData}");
+                        console.log("your binary must be a data object", dataObject);
                         return;
                     }
                 } else {
