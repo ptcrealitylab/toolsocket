@@ -298,7 +298,7 @@ class MainToolboxSocket extends ToolboxUtilities {
     constructor(baseURL, networkID, origin) {
         super();
         this.retryAmount = 5;
-        this.timetoRequestPackage = 3000;
+        this.timetoRequestPackage = 30000;
         this.netBeatInterval = 2000;
         this.networkID = networkID;
         this.url = ToolboxUtilities_addSearchParams(baseURL, {networkID});
