@@ -130,7 +130,6 @@ function ToolboxUtilities_validate(obj, msgLength, schema) {
     };
     let validArray = (obj, p, key, msgLength) => {
         if (!Array.isArray(obj[key])) return false;
-
         if (Number.isInteger(p[key].minLength) && msgLength < p[key].minLength) return false;
         if (Number.isInteger(p[key].maxLength) && msgLength > p[key].maxLength) return false;
         return true;
@@ -152,6 +151,7 @@ function ToolboxUtilities_validate(obj, msgLength, schema) {
         }
         return true;
     };
+
     let p = schema.items.properties;
     let verdict = true;
     for (let key in obj) {
@@ -165,8 +165,12 @@ function ToolboxUtilities_validate(obj, msgLength, schema) {
             if (p[key].type.includes("array") && validArray(obj, p, key, msgLength)) evaluate = true; // use msg for length to simplify / speedup
             if (p[key].type.includes("object") && validObject(obj, p, key, msgLength)) evaluate = true; // use msg for length to simplify / speedup
             if (p[key].type.includes("undefined") && validUndefined(obj, p, key)) evaluate = true;
-            if (!evaluate) verdict = false;
-        } else verdict = false;
+            if (!evaluate) {
+                verdict = false;
+            }
+        } else {
+            verdict = false;
+        }
     }
     if (!validRequired(obj, schema.items.required)) {
         verdict = false;
@@ -824,20 +828,19 @@ ToolSocket.Server = class Server extends ToolboxUtilities {
         console.log('ToolSocket Server Start');
         let WebSocket = require('ws');
         this.server = new WebSocket.Server(param);
-        this.server.on('connection', (socket, ...args) => {
-            class Socket extends MainToolboxSocket {
-                constructor(socket, origin) {
-                    super(undefined, undefined, origin);
-                    this._socket = socket._socket;
-                    this.socket = socket;
-                    if (!this.networkID) this.networkID = "toolbox";
-                    this.envNode = true;
-                    this.isServer = true;
-                    this.readyState = this.OPEN;
-                    this.attachEvents();
-                }
+        class Socket extends MainToolboxSocket {
+            constructor(socket, origin) {
+                super(undefined, undefined, origin);
+                this._socket = socket._socket;
+                this.socket = socket;
+                if (!this.networkID) this.networkID = "toolbox";
+                this.envNode = true;
+                this.isServer = true;
+                this.readyState = this.OPEN;
+                this.attachEvents();
             }
-
+        }
+        this.server.on('connection', (socket, ...args) => {
             if (this.socketID >= Number.MAX_SAFE_INTEGER) this.socketID = 1;
             this.socketID++;
             this.webSockets[this.socketID] = new Socket(socket, this.origin);
@@ -869,18 +872,18 @@ ToolSocket.Io.Server = class Server extends ToolboxUtilities {
             connected: {},
         };
         this.server = new ToolSocket.Server(param);
-        this.server.on('connection', (socket, ...args) => {
-            class Socket extends MainIo {
-                constructor(socket, origin) {
-                    super(undefined, undefined, origin);
-                    this.socket = socket;
-                    if (!this.socket.networkID) this.socket.networkID = "io";
-                    this.envNode = true;
-                    this.isServer = true;
-                    this.connected = true;
-                    this.attachEvents();
-                }
+        class Socket extends MainIo {
+            constructor(socket, origin) {
+                super(undefined, undefined, origin);
+                this.socket = socket;
+                if (!this.socket.networkID) this.socket.networkID = "io";
+                this.envNode = true;
+                this.isServer = true;
+                this.connected = true;
+                this.attachEvents();
             }
+        }
+        this.server.on('connection', (socket, ...args) => {
             if (this.id >= Number.MAX_SAFE_INTEGER) this.id = 1;
             this.id++;
             this.sockets.connected[this.id] = new Socket(socket, this.origin);
