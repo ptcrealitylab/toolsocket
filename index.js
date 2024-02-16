@@ -823,9 +823,8 @@ ToolSocket.Server = class Server extends ToolboxUtilities {
             return;
         }
         this.socketID = 1;
-        this.webSockets = {
-        };
-        console.log('ToolSocket Server Start');
+        this.webSockets = {};
+        console.info('ToolSocket server started');
         let WebSocket = require('ws');
         this.server = new WebSocket.Server(param);
         class Socket extends MainToolboxSocket {
@@ -866,7 +865,7 @@ ToolSocket.Io.Server = class Server extends ToolboxUtilities {
         if (typeof window !== 'undefined') {
             return;
         }
-        console.log('IO is waiting for ToolSocket Server');
+        console.info('ToolSocket IO server started');
         this.id = 1;
         this.sockets = {
             connected: {},
