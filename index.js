@@ -210,7 +210,7 @@ function ToolboxUtilities_parseUrl(url, schema) {
         }
     }
 
-    const fileEnum = ["jpg", "jpeg", "gif", "zip", "glb", "html", "map", "htm", "xml", "dat", "png", "js", "json", "obj", "splat", "ply", "fbx", "svg", "mp4", "pdf", "csv", "css", "woff", "otf", "webm", "webp", "ttf", "wasm"];
+    const fileEnum = ["jpg", "jpeg", "gif", "zip", "glb", "html", "map", "htm", "xml", "dat", "png", "js", "json", "obj", "splat", "ply", "3dt", "fbx", "svg", "mp4", "pdf", "csv", "css", "woff", "otf", "webm", "webp", "ttf", "wasm"];
     let res = {};
     let route = "";
     let querySplit = [];
