@@ -80,7 +80,9 @@ function ToolboxUtilities_byteToInt(num) {
 /**
  * Validate an object based on not-quite-json-schema
  * @param {any} obj
- * @param {number} msgLength - used in validArray/validObj for some reason
+ * @param {number} msgLength - used in validArray/validObj to enforce a
+ *     maximum/minimum length. NB: this msgLength includes the length of any
+ *     binary payload
  * @param {any} schema
  * @return {boolean} whether valid
  */
