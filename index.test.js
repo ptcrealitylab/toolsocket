@@ -261,11 +261,18 @@ test('validate(): body validation', () => {
 
 test('validate(): out of range body validation', done => {
     let string = "";
-    while (string.length < 70000002) {
+    const origMaxLength = client.dataPackageSchema.items.properties.b.maxLength;
+    // Original max length is far too large to be throwing around in unit tests
+    const aBigNumber = 70000;
+    client.dataPackageSchema.items.properties.b.maxLength = aBigNumber;
+    while (string.length <= aBigNumber) {
         string = string + "cl";
     }
     let obj = new client.DataPackage('client', "dklasdjd", "post", "/", string, "1dshh");
     expect(client.validate(obj, string.length, client.dataPackageSchema)).toBe(false);
+
+    // Reset schema
+    client.dataPackageSchema.items.properties.b.maxLength = origMaxLength;
 
     done();
 });
