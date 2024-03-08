@@ -421,8 +421,7 @@ class MainToolboxSocket extends ToolboxUtilities {
             if (typeof objBin.obj.b === "undefined") return;
 
             if (!this.validate(objBin.obj, msgLength, this.dataPackageSchema)) {
-                // console.log(objBin.obj.r,"not allowed");
-                console.log("not allowed");
+                console.log('not allowed', objBin.obj, msgLength);
                 return;
             }
             if (objBin.obj.m === 'ping') {
