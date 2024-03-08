@@ -351,7 +351,7 @@ class MainToolboxSocket extends ToolboxUtilities {
                     "n": {"type": "string", "minLength": 1, "maxLength": 25, "pattern": "^[A-Za-z0-9_]*$"},
                     "m": {"type": "string", "minLength": 1, "maxLength": 10, "enum": ["beat", "action", "ping", "get", "post", "put", "patch", "delete", "new", "unsub", "sub", "pub", "message", "io", "res", "keys"]},
                     "r": {"type": "string", "minLength": 0, "maxLength": 2000, "pattern": "^[A-Za-z0-9_/?:&+.%=-]*$"},
-                    "b": {"type": ["boolean", "array", "number", "string", "object"], "minLength": 0, "maxLength": 70000000},
+                    "b": {"type": ["boolean", "array", "number", "string", "object"], "minLength": 0, "maxLength": 300 * 1024 * 1024},
                     "s": {"type": ["string", "null", "undefined"], "minLength": 0, "maxLength": 45, "pattern": "^[A-Za-z0-9_]*$"},
                     "f": {"type": ["number", "null", "undefined"], "min": 1, "max": 99},
                 },
