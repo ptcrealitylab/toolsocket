@@ -74,4 +74,15 @@ describe('Utilities', () => {
         };
         expect(schema.parseUrl(url)).toEqual(expected);
     });
+
+    test('parseRoute should parse a route according to a schema', () => {
+        const route = '/n/networkSecret/path?query=value';
+        const schema = ToolSocket.URL_SCHEMA;
+        const expected = {
+            route: '/path',
+            query: 'query=value',
+            n: 'networkSecret'
+        };
+        expect(schema.parseRoute(route)).toEqual(expected);
+    });
 });
