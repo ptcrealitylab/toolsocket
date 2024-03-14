@@ -1,6 +1,6 @@
 /* global test, expect, afterAll */
 
-const ToolSocket = require('./new.js');
+const ToolSocket = require('./index.js');
 let client = new ToolSocket("ws://localhost:4321", "xkjhasdflk", "web");
 let server = new ToolSocket.Server({port: 4321});
 let ioServ = null;

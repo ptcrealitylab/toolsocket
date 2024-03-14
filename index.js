@@ -1,4 +1,4 @@
-const isBrowser = !!global.window;
+const isBrowser = typeof window !== 'undefined';
 const WebSocketWrapper = isBrowser ? WebSocket : require('ws');
 
 const MAX_MESSAGE_SIZE = 300 * 1024 * 1024;

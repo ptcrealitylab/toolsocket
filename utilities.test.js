@@ -1,5 +1,5 @@
 /* global describe, test, expect */
-const ToolSocket = require('./new.js');
+const ToolSocket = require('./index.js');
 
 describe('Utilities', () => {
     test('intToByte should convert integer to byte array', () => {
