@@ -213,37 +213,13 @@ class Schema {
          * @property {string} query - The query parameters
          */
 
-        /** @type {ParsedUrl} */
-        const parsedData = {
+        return {
             protocol: protocol,
             server: url.hostname,
             port: port,
-            route: '',
-            // type: filetype
+            ...this.parseRoute(url.pathname),
             query: url.searchParams.toString()
         };
-
-        const pathSegments = url.pathname.split('/');
-        const lastPathSegment = pathSegments.at(-1);
-        if (lastPathSegment.split('.').length > 1) {
-            parsedData.type = lastPathSegment.split('.').at(-1);
-        }
-
-        for (let i = 0; i < pathSegments.length; i++) {
-            const pathSegment = pathSegments[i];
-            if (this.expectedKeys.includes(pathSegment)) {
-                if (pathSegments[i + 1]) {
-                    parsedData[pathSegment] = pathSegments[i + 1];
-                }
-                i++; // Skip to next pathSegment after key-value pair
-                continue;
-            }
-            if (pathSegment === '') {
-                continue;
-            }
-            parsedData.route += '/' + pathSegment;
-        }
-        return parsedData;
     }
 
     /**
@@ -263,13 +239,13 @@ class Schema {
         const parsedData = {
             route: '',
             // type: filetype
-            query: route.slice(route.indexOf('?'))
+            query: route.includes('?') ? route.slice(route.indexOf('?') + 1) : ''
         };
 
         const pathname = route.split('?')[0];
         const pathSegments = pathname.split('/');
         const lastPathSegment = pathSegments.at(-1);
-        if (lastPathSegment.split('.').at(-1)) {
+        if (lastPathSegment.split('.').length > 1) {
             parsedData.type = lastPathSegment.split('.').at(-1);
         }
 
@@ -280,6 +256,9 @@ class Schema {
                     parsedData[pathSegment] = pathSegments[i + 1];
                 }
                 i++; // Skip to next pathSegment after key-value pair
+                continue;
+            }
+            if (pathSegment === '') {
                 continue;
             }
             parsedData.route += '/' + pathSegment;
