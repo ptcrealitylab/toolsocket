@@ -1,6 +1,6 @@
 /* global test, expect, afterAll */
 
-const ToolSocket = require('./index.js');
+const ToolSocket = require('./new.js');
 let client = new ToolSocket("ws://localhost:4321", "xkjhasdflk", "web");
 let server = new ToolSocket.Server({port: 4321});
 let ioServ = null;
@@ -86,14 +86,12 @@ test("testing IO compatibility", done => {
     ioClient.on("connect", () => {
         ioClient.emit("/x", "/x client", {data: enc.encode("IO bin client")});
         ioClient.on("/x", (m, d) => {
-            //  console.log("/x client: ", m, dec.decode(d.data))
             expect(m).toBe('/x server');
             expect(dec.decode(d.data)).toBe('IO bin server');
         });
 
         ioClient.emit("/binArray", "/binArray client", {data: [enc.encode("IO_00 bin client"), enc.encode("IO_01 bin client"), enc.encode("IO_02 bin client"), enc.encode("IO_03 bin client")]});
         ioClient.on("/binArray", (m, d) => {
-            //  console.log("/x client: ", m, dec.decode(d.data))
             expect(m).toBe('/binArray server');
             expect(dec.decode(d.data[0])).toBe('IO_00 bin server');
             expect(dec.decode(d.data[1])).toBe('IO_01 bin server');
@@ -104,7 +102,6 @@ test("testing IO compatibility", done => {
 
         ioClient.emit("/no", "/no client",  enc.encode(" IO bin client"));
         ioClient.on("/no", (m, d) => {
-            console.warn('ioClient /no called', m, d);
             // should not be reached
             expect(true).toBe(false);
         });
@@ -114,11 +111,9 @@ test("testing IO compatibility", done => {
             expect(m).toBe('/n server');
         });
         expect(ioClient.connected).toBe(true);
-        // console.log("client", ioClient.connected);
     });
 
     ioServer.on('connection', (ioSocket) => {
-        console.log("thisID ", ioSocket.id);
         //  expect(ioSocket.id).toBe("2´´");
 
         ioSocket.emit("/x", "/x server", {
@@ -142,19 +137,15 @@ test("testing IO compatibility", done => {
 
         ioSocket.emit("/no", "/no server", enc.encode(" IO bin server"));
         ioSocket.on("/no", (m, d) => {
-            console.warn('ioServer /no called', m, d);
             // should never reach
             expect(true).toBe(false);
-            //  console.log("/no server: ", m, dec.decode(d.data))
         });
 
         ioSocket.emit("/n", "/n server");
         ioSocket.on("/n", (m) => {
             expect(m).toBe('/n client says Hi');
-            //  console.log("/n server: ", m)
         });
         expect(ioSocket.connected).toBe(true);
-        //console.log("server", ioSocket.connected)
 
         setTimeout(function() {
             ioCli = ioClient;
