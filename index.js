@@ -991,7 +991,7 @@ class ToolSocket {
             this.connect(url, networkId, origin);
         } else if (isBrowser) {
             url = new URL(window.location.href);
-            url.protocol = this.url.protocol.replace('http', 'ws');
+            url.protocol = url.protocol.replace('http', 'ws');
             this.connect(url, networkId, origin);
         }
 
