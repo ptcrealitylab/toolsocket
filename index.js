@@ -375,6 +375,9 @@ class MainToolboxSocket extends ToolboxUtilities {
                         obj: new that.DataPackage(that.origin, obj.n, 'res', obj.r, {}, obj.i),
                         bin: data
                     };
+                    if (obj.s) {
+                        resObj.obj.s = obj.s;
+                    }
                     if (res) {
                         resObj.obj.b = res;
                     } else {
