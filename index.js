@@ -807,7 +807,7 @@ class ToolSocket extends MainToolboxSocket {
                 this.readyState = this.CLOSED;
                 this.socket.close();
             }
-            this.socket = new this.WebSocket(url);
+            this.socket = new this.WebSocket(url, [], {maxPayload: 300 * 1024 * 1024});
             this.socket.onerror = (err) => {
                 this.emitInt('error', err);
             };
