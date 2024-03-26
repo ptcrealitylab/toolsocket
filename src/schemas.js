@@ -121,4 +121,4 @@ const MESSAGE_BUNDLE_SCHEMA = new Schema([
 module.exports = {
     URL_SCHEMA,
     MESSAGE_BUNDLE_SCHEMA
-}
+};

@@ -130,7 +130,7 @@ class Schema {
             } else if (['ws', 'http'].includes(protocol)) {
                 port = 80;
             } else {
-                throw new Error(`Cannot determine port for protocol ${protocol}`);
+                return null;
             }
         }
 

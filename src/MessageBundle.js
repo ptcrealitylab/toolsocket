@@ -12,7 +12,7 @@ class MessageBundle {
     /**
      * Creates a MessageBundle.
      * @param {ToolSocketMessage} message - The message
-     * @param {Uint8Array | ArrayBuffer | [Uint8Array] | [ArrayBuffer]} binaryData - The binary data
+     * @param {Uint8Array | ArrayBuffer | Uint8Array[] | ArrayBuffer[]} binaryData - The binary data
      */
     constructor(message, binaryData) {
         this.message = message;
@@ -30,15 +30,15 @@ class MessageBundle {
         const messageBuffer = encoder.encode(JSON.stringify(this.message));
         const messageLengthBuffer = intToByte(messageBuffer.length);
         const binaryDataBuffer = this.binaryData ? new Uint8Array(this.binaryData) : null;
-        // Apologies for the terrible naming, but this keeps the following line cleaner by hiding the ternary operator
+        // Apologies for the terrible naming in this block, but this keeps the following line cleaner by hiding the ternary operator
         const binaryDataBufferLength = binaryDataBuffer ? binaryDataBuffer.length : 0;
-        const result = new Uint8Array(messageLengthBuffer.length + messageBuffer.length + binaryDataBufferLength);
-        result.set(messageLengthBuffer, 0);
-        result.set(messageBuffer, messageLengthBuffer.length);
+        const binaryOutput = new Uint8Array(messageLengthBuffer.length + messageBuffer.length + binaryDataBufferLength);
+        binaryOutput.set(messageLengthBuffer, 0);
+        binaryOutput.set(messageBuffer, messageLengthBuffer.length);
         if (binaryDataBuffer) {
-            result.set(binaryDataBuffer, messageLengthBuffer.length + messageBuffer.length);
+            binaryOutput.set(binaryDataBuffer, messageLengthBuffer.length + messageBuffer.length);
         }
-        return result;
+        return binaryOutput;
     }
 
     /**
@@ -72,7 +72,8 @@ class MessageBundle {
             throw new Error('Cannot create a MessageBundle from a BinaryBuffer that is not full.');
         }
         const message = binaryBuffer.mainMessage;
-        const binaryData = []; // TODO: check if this can be a Uint8Array
+        /** @type Uint8Array[] */
+        const binaryData = [];
         binaryBuffer.messageBuffer.forEach(message => {
             binaryData.push(message);
         });

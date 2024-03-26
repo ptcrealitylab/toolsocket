@@ -10,7 +10,8 @@ class BinaryBuffer {
         // this.buffer = new Uint8Array(length);
         /** @type {?ToolSocketMessage} */
         this.mainMessage = null; // Object that contains data about the whole message
-        this.messageBuffer = []; // TODO: look into if this can be replaced with a Uint8Array
+        /** @type {Uint8Array[]} */
+        this.messageBuffer = [];
         this.length = length;
     }
 
@@ -22,11 +23,10 @@ class BinaryBuffer {
         return this.messageBuffer.length >= this.length;
     }
 
-    // TODO: determine the type of `message`, are we pushing Uint8Arrays?
     /**
      * Pushes a message to the messageBuffer. Throws an error if pushing would cause the buffer
      * length to exceed `this.length`.
-     * @param message
+     * @param {Uint8Array} message
      */
     push(message) {
         if (this.isFull) {
