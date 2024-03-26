@@ -1,4 +1,8 @@
 ## ToolSocket
+
+#### Building for Browser
+Run `npm run build`, then copy `dist/toolsocket.js` to your server and load it in a script tag.
+
 #### For socket.io API compatibility scroll down!
 ToolSocket is a WebSocket server (nodejs only) and client for nodejs and browsers and a minimal but strict JSON Schema validator. The goal is to simplify real-time data communication.
 

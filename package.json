@@ -2,10 +2,10 @@
   "name": "toolsocket",
   "version": "1.0.0",
   "description": "A websocket server for nodejs and client for nodejs and browser. Supports Req/Res, Send without response and in future pub/sub.",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "jest",
-    "build": "esbuild index.js --bundle --outfile=dist/toolsocket.js --format=iife --global-name=ToolSocket --external:ws"
+    "build": "esbuild src/index.js --bundle --outfile=dist/toolsocket.js --format=iife --global-name=ToolSocket --external:ws"
   },
   "repository": {
     "type": "git",
