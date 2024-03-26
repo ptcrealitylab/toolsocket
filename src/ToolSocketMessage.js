@@ -19,7 +19,7 @@ class ToolSocketMessage {
         this.m = method;
         this.r = route;
         this.b = body;
-        this.i = id;
+        this.i = id !== undefined ? id : null;
         this.s = null;
         /** @type {?number} */
         this.f = null;

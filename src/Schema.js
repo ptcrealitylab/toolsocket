@@ -162,7 +162,7 @@ class Schema {
     /**
      * Parses a route and extracts all `expected === true` keys from it.
      * @param {string} route - The route to parse
-     * @param {?boolean} skipValidation - Whether to skip validation, only used by parseUrl
+     * @param {boolean?} skipValidation - Whether to skip validation, only used by parseUrl
      * @returns {?ParsedRoute} - The extracted data
      */
     parseRoute(route, skipValidation) {

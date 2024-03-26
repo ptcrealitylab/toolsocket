@@ -34,6 +34,12 @@ describe('Schema', () => {
             expect(personSchema.validate(invalidObject)).toBe(false);
         });
 
+        test('failedValidator should point to validator that failed', () => {
+            const invalidObject = { name: 'John', age: -1 };
+            personSchema.validate(invalidObject);
+            expect(personSchema.failedValidator).toBeInstanceOf(Schema.NumberValidator);
+        });
+
         describe('StringValidator', () => {
             const stringSchema = new Schema([
                 new Schema.StringValidator('string', {
@@ -169,6 +175,20 @@ describe('Schema', () => {
                 expect(groupSchema.validate({group: 0})).toBe(false);
                 expect(groupSchema.validate({group: true})).toBe(false);
             });
+
+            test('should throw error if sub-validators do not match key', () => {
+                expect(() => new Schema.GroupValidator('key', [
+                    new Schema.StringValidator('otherKey', {
+                        minLength: 2,
+                        maxLength: 4,
+                        pattern: /^[A-z]*$/
+                    }),
+                    new Schema.NumberValidator('otherKey', {
+                        minValue: 2,
+                        maxValue: 4,
+                    })
+                ])).toThrow(/Cannot create a GroupValidator from validators with different keys/);
+            });
         });
     });
 
@@ -211,7 +231,7 @@ describe('Schema', () => {
             });
         });
 
-        test('should extract expected query from a valid URL with query params', () => {
+        test('should extract query from a valid URL with query params', () => {
             const schema = new Schema([
                 new Schema.StringValidator('protocol', { enum: ['http', 'https'] }),
                 new Schema.StringValidator('server', { required: true }),
@@ -273,7 +293,7 @@ describe('Schema', () => {
             const schema = new Schema([
                 new Schema.StringValidator('protocol', { enum: ['http', 'https'] }),
                 new Schema.StringValidator('server', { required: true }),
-                new Schema.NumberValidator('port', { minValue: 0, maxValue: 65535 }),
+                new Schema.NumberValidator('port', { minValue: 0, maxValue: 65535 })
             ]);
 
             const url = new URL('ftp://example.com');
@@ -285,7 +305,7 @@ describe('Schema', () => {
     describe('parseRoute', () => {
         test('should parse a valid route', () => {
             const schema = new Schema([
-                new Schema.StringValidator('type', { enum: ['json', 'xml'] }),
+                new Schema.StringValidator('type', { enum: ['json', 'xml'] })
             ]);
 
             const route = '/api/data.json';
@@ -299,12 +319,25 @@ describe('Schema', () => {
 
         test('should return null for an invalid route', () => {
             const schema = new Schema([
-                new Schema.StringValidator('type', { enum: ['json', 'xml'] }),
+                new Schema.StringValidator('type', { enum: ['json', 'xml'] })
             ]);
 
             const route = '/api/data.csv';
             const parsedRoute = schema.parseRoute(route);
             expect(parsedRoute).toBeNull();
+        });
+
+        test('should extract query from a valid route with query params', () => {
+            const schema = new Schema([
+                new Schema.StringValidator('type', { enum: ['json', 'xml'] })
+            ]);
+
+            const route = '/path?key=value';
+            const parsedRoute = schema.parseRoute(route);
+            expect(parsedRoute).toEqual({
+                route: '/path',
+                query: 'key=value'
+            });
         });
     });
 });
