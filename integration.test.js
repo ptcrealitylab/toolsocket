@@ -7,7 +7,7 @@ describe('ToolSocket', () => {
     let serverSideSocket;
 
     beforeAll((done) => {
-        server = new ToolSocket.Server({ port: 8080 }, 'client');
+        server = new ToolSocket.Server({ port: 5010 }, 'client');
         server.addEventListener('listening', () => {
             done();
         });
@@ -20,7 +20,7 @@ describe('ToolSocket', () => {
     });
 
     beforeEach((done) => {
-        toolSocket = new ToolSocket(new URL('ws://localhost:8080'), 'test_network', 'client');
+        toolSocket = new ToolSocket(new URL('ws://localhost:5010'), 'test_network', 'client');
         toolSocket.addEventListener('open', () => {
             done();
         });
