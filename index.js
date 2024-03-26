@@ -186,7 +186,7 @@ class Schema {
     /**
      * Parses a URL and extracts all `expected === true` keys from it.
      * @param {URL} url - The URL to parse
-     * @returns {ParsedUrl} - The extracted data
+     * @returns {?ParsedUrl} - The extracted data
      */
     parseUrl(url) {
         const protocol = url.protocol.slice(0, -1); // Drop tailing colon
@@ -213,21 +213,28 @@ class Schema {
          * @property {string} query - The query parameters
          */
 
-        return {
+        const parsedRoute = this.parseRoute(url.pathname, true);
+        const parsedUrl = {
             protocol: protocol,
             server: url.hostname,
             port: port,
-            ...this.parseRoute(url.pathname),
+            ...parsedRoute,
             query: url.searchParams.toString()
         };
+
+        if (this.validate(parsedUrl)) {
+            return parsedUrl;
+        }
+        return null;
     }
 
     /**
      * Parses a route and extracts all `expected === true` keys from it.
      * @param {string} route - The route to parse
-     * @returns {ParsedRoute} - The extracted data
+     * @param {?boolean} skipValidation - Whether to skip validation, only used by parseUrl
+     * @returns {?ParsedRoute} - The extracted data
      */
-    parseRoute(route) {
+    parseRoute(route, skipValidation) {
         /**
          * @typedef {object} ParsedRoute
          * @property {string} route - The pathname with expected schema parameters removed
@@ -236,7 +243,7 @@ class Schema {
          */
 
         /** @type {ParsedRoute} */
-        const parsedData = {
+        const parsedRoute = {
             route: '',
             // type: filetype
             query: route.includes('?') ? route.slice(route.indexOf('?') + 1) : ''
@@ -246,14 +253,14 @@ class Schema {
         const pathSegments = pathname.split('/');
         const lastPathSegment = pathSegments.at(-1);
         if (lastPathSegment.split('.').length > 1) {
-            parsedData.type = lastPathSegment.split('.').at(-1);
+            parsedRoute.type = lastPathSegment.split('.').at(-1);
         }
 
         for (let i = 0; i < pathSegments.length; i++) {
             const pathSegment = pathSegments[i];
             if (this.expectedKeys.includes(pathSegment)) {
                 if (pathSegments[i + 1]) {
-                    parsedData[pathSegment] = pathSegments[i + 1];
+                    parsedRoute[pathSegment] = pathSegments[i + 1];
                 }
                 i++; // Skip to next pathSegment after key-value pair
                 continue;
@@ -261,9 +268,13 @@ class Schema {
             if (pathSegment === '') {
                 continue;
             }
-            parsedData.route += '/' + pathSegment;
+            parsedRoute.route += '/' + pathSegment;
         }
-        return parsedData;
+
+        if (skipValidation || this.validate(parsedRoute)) {
+            return parsedRoute;
+        }
+        return null;
     }
 }
 
@@ -302,7 +313,7 @@ class SchemaValidator {
             }
         }
         const value = object[this.key];
-        if (this.enum !== null && !this.enum.includes(value)) {
+        if (this.key in object && this.enum !== null && !this.enum.includes(value)) {
             return false;
         }
         return true;
@@ -338,6 +349,9 @@ class StringValidator extends SchemaValidator {
     validate(object) {
         if (!super.validate(object)) {
             return false;
+        }
+        if (!(this.key in object)) {
+            return true; // If not required, passes trivially when not present
         }
         const value = object[this.key];
         if (typeof value !== 'string') {
@@ -384,6 +398,9 @@ class NumberValidator extends SchemaValidator {
         if (!super.validate(object)) {
             return false;
         }
+        if (!(this.key in object)) {
+            return true; // If not required, passes trivially when not present
+        }
         const value = object[this.key];
         if (typeof value !== 'number') {
             return false;
@@ -419,6 +436,9 @@ class BooleanValidator extends SchemaValidator {
         if (!super.validate(object)) {
             return false;
         }
+        if (!(this.key in object)) {
+            return true; // If not required, passes trivially when not present
+        }
         return typeof object[this.key] === 'boolean';
     }
 }
@@ -444,6 +464,9 @@ class NullValidator extends SchemaValidator {
         if (!super.validate(object)) {
             return false;
         }
+        if (!(this.key in object)) {
+            return true; // If not required, passes trivially when not present
+        }
         return object[this.key] === null;
     }
 }
@@ -468,6 +491,9 @@ class UndefinedValidator extends SchemaValidator {
     validate(object) {
         if (!super.validate(object)) {
             return false;
+        }
+        if (!(this.key in object)) {
+            return true; // If not required, passes trivially when not present
         }
         return object[this.key] === undefined;
     }
@@ -500,6 +526,9 @@ class ArrayValidator extends SchemaValidator {
     validate(object) {
         if (!super.validate(object)) {
             return false;
+        }
+        if (!(this.key in object)) {
+            return true; // If not required, passes trivially when not present
         }
         const value = object[this.key];
         if (!Array.isArray(value)) {
@@ -536,6 +565,9 @@ class ObjectValidator extends SchemaValidator {
         if (!super.validate(object)) {
             return false;
         }
+        if (!(this.key in object)) {
+            return true; // If not required, passes trivially when not present
+        }
         const value = object[this.key];
         return typeof value === 'object' && !Array.isArray(value);
     }
@@ -567,6 +599,9 @@ class GroupValidator extends SchemaValidator {
     validate(object) {
         if (!super.validate(object)) {
             return false;
+        }
+        if (!(this.key in object)) {
+            return true; // If not required, passes trivially when not present
         }
         return this.validators.some(validator => validator.validate(object));
     }
@@ -939,6 +974,9 @@ class ToolSocketResponse {
             return;
         }
         this.sent = true;
+        if (body === undefined || body === null) {
+            body = 204;
+        }
         const message = new ToolSocketMessage(this.toolSocket.origin, this.originalMessage.network, 'res', this.originalMessage.route, body, this.originalMessage.id);
         const messageBundle = new MessageBundle(message, binaryData);
         this.toolSocket.send(messageBundle, null);
@@ -965,6 +1003,17 @@ class ToolSocket {
         this.responseCallbacks = {}; // For responses to messages
         /** @type {?BinaryBuffer} */
         this.binaryBuffer = null;
+
+        /**
+         * @typedef {object} QueuedMessage
+         * @property {MessageBundle} messageBundle
+         * @property {function} callback
+         */
+
+        /** @type [QueuedMessage] */
+        this.queuedMessages = []; // For messages sent while not connected
+
+        this.socket = null;
 
         if (url) {
             this.connect(url, networkId, origin);
@@ -1006,11 +1055,15 @@ class ToolSocket {
 
         if (!networkId) {
             const urlData = URL_SCHEMA.parseUrl(url);
-            this.networkId = urlData.n || 'io'; // Unclear what the purpose of these defaults is
+            if (urlData) {
+                this.networkId = urlData.n || 'io'; // Unclear what the purpose of this default is
+            } else {
+                this.networkId = 'io'; // Unclear what the purpose of this default is
+            }
         } else {
             this.networkId = networkId;
         }
-        this.origin = origin ? (isBrowser ? 'web' : origin) : 'server'; // Unclear what the purpose of these defaults is, or why 'web' overrides input
+        this.origin = origin ? origin : (isBrowser ? 'web' : 'server'); // Unclear what the purpose of this default is
 
         const searchParams = new URLSearchParams({networkID: this.networkId}); // TODO: make these names (networkID, networkId) equivalent
         this.url = addSearchParams(url, searchParams);
@@ -1082,6 +1135,7 @@ class ToolSocket {
             this.triggerEvent('connect', event);
             this.triggerEvent('connected', event);
             this.triggerEvent('status', this.socket.readyState);
+            this.sendQueuedMessages();
         });
         this.socket.addEventListener('close', event => {
             this.triggerEvent('close', event);
@@ -1106,11 +1160,13 @@ class ToolSocket {
      * Initiates the ping interval
      */
     setupPingInterval() {
-        const interval = setInterval(() => {
+        const autoPing = () => {
             this.ping('action/ping', null, () => {
                 this.triggerEvent('pong');
             });
-        }, 2000);
+        };
+        const interval = setInterval(autoPing, 2000);
+        autoPing(); // Must ping before messages get sent so that cloud-proxy can set up network properly
         this.socket.addEventListener('close', () => {
             clearInterval(interval);
         });
@@ -1137,6 +1193,7 @@ class ToolSocket {
                     return;
                 }
             } catch (_e) {
+                this.triggerEvent('droppedMessage', message);
                 return;
             }
         } else if (this.binaryBuffer) {
@@ -1152,6 +1209,7 @@ class ToolSocket {
                 messageLength = message.length; // TODO: Ensure this actually works on message
                 this.binaryBuffer = null;
             } catch (_e) {
+                this.triggerEvent('droppedMessage', message);
                 return;
             }
         } else {
@@ -1160,6 +1218,7 @@ class ToolSocket {
                 messageBundle = MessageBundle.fromBinary(message);
                 messageLength = message.length; // TODO: Ensure this actually works on message
             } catch (_e) {
+                this.triggerEvent('droppedMessage', message);
                 return;
             }
         }
@@ -1167,13 +1226,16 @@ class ToolSocket {
         // TODO: test for message length as well
         if (!MESSAGE_BUNDLE_SCHEMA.validate(messageBundle.message)) {
             console.warn('message schema validation failed', messageBundle.message, MESSAGE_BUNDLE_SCHEMA.failedValidator);
+            this.triggerEvent('droppedMessage', message);
             return;
         }
 
         if (messageBundle.message.method === 'ping') {
             // TODO: move this to a ping event listener once event format is improved, need access to `n` there
             // Update network ID on ping message
-            if (this.networkId !== messageBundle.message.network) {
+            // 'toolbox' is the initial network ID for a connection from cloud-proxy to client used until first ping
+            // Should not override actual network ID
+            if (messageBundle.message.network !== 'toolbox' && messageBundle.message.network !== this.networkId) {
                 this.triggerEvent('network', messageBundle.message.network, this.networkId, messageBundle.message);
                 this.networkId = messageBundle.message.network;
             }
@@ -1200,11 +1262,26 @@ class ToolSocket {
     }
 
     /**
+     * Sends messages that were queued up while socket was disconnected
+     */
+    sendQueuedMessages() {
+        this.queuedMessages.forEach(({messageBundle, callback}) => {
+            this.send(messageBundle, callback);
+        });
+        this.queuedMessages = [];
+    }
+
+    /**
      * Sends a message bundle, used internally. Do not call this method from outside ToolSocket.
+     * If the underlying socket is not yet open, queue the messages to be sent once the connection is open.
      * @param {MessageBundle} messageBundle - The MessageBundle to send
      * @param {?function} callback - An optional callback to handle responses
      */
     send(messageBundle, callback) {
+        if (!this.connected) {
+            this.queuedMessages.push({messageBundle, callback});
+            return;
+        }
         // Note: if too much data is queued to be sent, the connection automatically closes
         // https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/send
         // Should we check for this?
@@ -1216,16 +1293,25 @@ class ToolSocket {
         if (messageBundle.binaryData) {
             if (Array.isArray(messageBundle.binaryData)) {
                 messageBundle.message.frameCount = messageBundle.binaryData.length;
-                this.socket.send(JSON.stringify(messageBundle.message));
+                const metaSendData = JSON.stringify(messageBundle.message);
+                this.socket.send(metaSendData);
+                this.triggerEvent('rawSend', metaSendData);
                 messageBundle.binaryData.forEach(entry => {
-                    this.socket.send(entry);
+                    const sendData = entry;
+                    this.socket.send(sendData);
+                    this.triggerEvent('rawSend', sendData);
                 });
             } else {
-                this.socket.send(messageBundle.toBinary());
+                const sendData = messageBundle.toBinary();
+                this.socket.send(sendData);
+                this.triggerEvent('rawSend', sendData);
             }
         } else {
-            this.socket.send(JSON.stringify(messageBundle.message));
+            const sendData = JSON.stringify(messageBundle.message);
+            this.socket.send(sendData);
+            this.triggerEvent('rawSend', sendData);
         }
+        this.triggerEvent('send', messageBundle);
     }
 
     /**
@@ -1439,6 +1525,10 @@ class ToolSocket {
         this.emitInt = this.triggerEvent;
         this.dataPackageSchema = MESSAGE_BUNDLE_SCHEMA.oldFormat;
         this.routeSchema = URL_SCHEMA.oldFormat;
+        this.OPEN = WebSocketWrapper.OPEN;
+        this.CONNECTING = WebSocketWrapper.CONNECTING;
+        this.CLOSING = WebSocketWrapper.CLOSING;
+        this.CLOSED = WebSocketWrapper.CLOSED;
     }
 }
 
@@ -1467,13 +1557,14 @@ class ToolSocketServer {
         this.server.on('connection', socket => {
             const toolSocket = new ToolSocket();
             toolSocket.socket = socket;
-            toolSocket.networkId = 'toolbox'; // Or 'io'
+            toolSocket.networkId = 'toolbox'; // Or 'io'?
             toolSocket.origin = this.origin;
             toolSocket.configureSocket();
+            this.sockets.push(toolSocket);
             this.triggerEvent('connection', toolSocket);
 
             socket.on('close', () => {
-                this.sockets.splice(this.sockets.indexOf(socket), 1);
+                this.sockets.splice(this.sockets.indexOf(toolSocket), 1);
             });
         });
 

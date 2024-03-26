@@ -85,4 +85,19 @@ describe('Utilities', () => {
         };
         expect(schema.parseRoute(route)).toEqual(expected);
     });
+
+    test('URL_SCHEMA should extract filetype if present', () => {
+        const url = new URL('http://localhost:8000/n/1vfg7mfUcG2A5tPK1wzT/i/lg00JY5hooYElJR/obj/_WORLD_instantScantXAjhsrs/target/target.glb');
+        const schema = ToolSocket.URL_SCHEMA;
+        const expected = {
+            n: "1vfg7mfUcG2A5tPK1wzT",
+            port: 8000,
+            protocol: "http",
+            query: "",
+            route: "/i/lg00JY5hooYElJR/obj/_WORLD_instantScantXAjhsrs/target/target.glb",
+            server: "localhost",
+            type: 'glb'
+        };
+        expect(schema.parseUrl(url)).toEqual(expected);
+    });
 });
