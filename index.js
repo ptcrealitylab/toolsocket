@@ -1659,5 +1659,5 @@ if (isBrowser) {
     window.io = new ToolSocket();
 } else {
     ToolSocket.Server = ToolSocketServer;
-    module.exports = ToolSocket;
 }
+module.exports = ToolSocket;

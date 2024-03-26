@@ -4,7 +4,8 @@
   "description": "A websocket server for nodejs and client for nodejs and browser. Supports Req/Res, Send without response and in future pub/sub.",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "build": "esbuild index.js --bundle --outfile=dist/toolsocket.js --format=iife --global-name=ToolSocket --external:ws"
   },
   "repository": {
     "type": "git",
@@ -30,6 +31,7 @@
   "devDependencies": {
     "@babel/eslint-parser": "^7.16.5",
     "@babel/preset-env": "^7.16.11",
+    "esbuild": "^0.20.2",
     "eslint": "^8.8.0",
     "jest": "^27.2.5",
     "regenerator-runtime": "^0.14.1"
