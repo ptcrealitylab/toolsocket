@@ -3,6 +3,10 @@ const WebSocketWrapper = isBrowser ? WebSocket : require('ws');
 
 const MAX_MESSAGE_SIZE = 300 * 1024 * 1024;
 const VALID_FILETYPES = ['css', 'csv', 'dat', 'fbx', 'gif', 'glb', 'htm', 'html', 'jpg', 'jpeg', 'js', 'json', 'map', 'mp4', 'obj', 'otf', 'pdf', 'ply', 'png', 'splat', 'svg', 'ttf', 'wasm', 'webm', 'webp', 'woff', 'xml', 'zip', '3dt'];
+/**
+ * @typedef {'action' | 'beat' | 'delete' | 'get' | 'io' | 'keys' | 'message' | 'new' | 'patch' | 'ping' | 'post' | 'pub' | 'put' | 'res' | 'sub' | 'unsub'} MethodString
+ */
+/** @type MethodString[] */
 const VALID_METHODS = ['action', 'beat', 'delete', 'get', 'io', 'keys', 'message', 'new', 'patch', 'ping', 'post', 'pub', 'put', 'res', 'sub', 'unsub'];
 const REGEXES = {
     n: /^[A-Za-z0-9_]*$/,
@@ -1336,7 +1340,7 @@ class ToolSocket {
 
     /**
      * Sends a message using the given HTTP-like method
-     * @param {string} method - The method to use
+     * @param {MethodString} method - The method to use
      * @param {string} route - The route
      * @param {any} body - The message body
      * @param {function} [callback] - A callback function that is called if a response is required
