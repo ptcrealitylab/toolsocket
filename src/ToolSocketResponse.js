@@ -19,11 +19,10 @@ class ToolSocketResponse {
         this.sent = false;
     }
 
-    // TODO: type annotation for binaryData
     /**
      * Sends a response
      * @param {any} body - The message body to send
-     * @param binaryData - The binary data to send with the message
+     * @param {MessageBinaryData} binaryData - The binary data to send with the message
      */
     send(body, binaryData) {
         if (this.sent) {

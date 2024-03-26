@@ -4,15 +4,16 @@ const ToolSocketMessage = require('./ToolSocketMessage.js');
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
+/** @typedef {Uint8Array | ArrayBuffer | Uint8Array[] | ArrayBuffer[]} MessageBinaryData */
+
 /**
  * Represents a message that may or may not include binary data
  */
 class MessageBundle {
-    // TODO: determine type of binaryData
     /**
      * Creates a MessageBundle.
      * @param {ToolSocketMessage} message - The message
-     * @param {Uint8Array | ArrayBuffer | Uint8Array[] | ArrayBuffer[]} binaryData - The binary data
+     * @param {MessageBinaryData} binaryData - The binary data
      */
     constructor(message, binaryData) {
         this.message = message;

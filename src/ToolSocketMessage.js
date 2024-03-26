@@ -2,15 +2,16 @@
  * A message in ToolSocket's format
  */
 class ToolSocketMessage {
-    // TODO: define body type and parameter descriptions better
     /**
      * Creates a ToolSocketMessage
-     * @param {string} origin - The origin
-     * @param {string} network - The network
-     * @param {string} method - The method being performed (e.g. get, post)
-     * @param {string} route - The route to send the message to
-     * @param {any} body - The message body
-     * @param {string?} id - An ID for listening to responses
+     * @param {string} origin - The origin of the message (e.g. client, web, server)
+     * @param {string} network - The network ID (can be thought of as a socket.io room)
+     * @param {string} method - The method being performed (e.g. get, post, delete)
+     * @param {string} route - The route to send the message to (e.g. /about, /home)
+     * @param {any} body - The message body (an arbitrary JS object to be stringified)
+     * @param {string?} id - An ID for listening for responses
+     * secret - A secret used to manage write access
+     * frameCount - Number of binary buffers that will be sent following this message
      */
     constructor(origin, network, method, route, body, id) {
         // These parameters are impossible to read in code, use the getters and setters
@@ -20,6 +21,7 @@ class ToolSocketMessage {
         this.r = route;
         this.b = body;
         this.i = id !== undefined ? id : null;
+        /** @type {?string} */
         this.s = null;
         /** @type {?number} */
         this.f = null;
@@ -85,7 +87,15 @@ class ToolSocketMessage {
         this.i = newId;
     }
 
-    // TODO: figure out what .s is
+    /** @type {?string} */
+    get secret() {
+        return this.s;
+    }
+
+    /** @param {?string} newSecret */
+    set secret(newSecret) {
+        this.s = newSecret;
+    }
 
     /** @type {?number} */
     get frameCount() {

@@ -20,8 +20,6 @@ const URL_SCHEMA = new Schema([
         expected: true
     }),
     new Schema.StringValidator('type', {
-        // minLength: 1,
-        // maxLength: 5,
         enum: VALID_FILETYPES
     }),
     new Schema.StringValidator('protocol', {
@@ -49,7 +47,7 @@ const URL_SCHEMA = new Schema([
 ]);
 
 const MESSAGE_BUNDLE_SCHEMA = new Schema([
-    // id
+    // ID
     new Schema.GroupValidator('i', [
         new Schema.StringValidator('i', {
             minLength: 1,
@@ -59,31 +57,31 @@ const MESSAGE_BUNDLE_SCHEMA = new Schema([
         new Schema.NullValidator('i'),
         new Schema.UndefinedValidator('i')
     ]),
-    // origin
+    // Origin
     new Schema.StringValidator('o', {
         enum: ['server', 'client', 'web', 'edge', 'proxy'],
         required: true
     }),
-    // network
+    // Network
     new Schema.StringValidator('n', {
         minLength: 1,
         maxLength: 25,
         pattern: REGEXES.n,
         required: true
     }),
-    // method
+    // Method
     new Schema.StringValidator('m', {
         enum: VALID_METHODS,
         required: true
     }),
-    // route
+    // Route
     new Schema.StringValidator('r', {
         minLength: 0,
         maxLength: 2000,
         pattern: REGEXES.r,
         required: true
     }),
-    // body
+    // Body
     new Schema.GroupValidator('b', [
         new Schema.BooleanValidator('b'),
         new Schema.ArrayValidator('b', {
@@ -97,7 +95,7 @@ const MESSAGE_BUNDLE_SCHEMA = new Schema([
         }),
         new Schema.ObjectValidator('b')
     ], { required: true }),
-    // unknown, doesn't seem to be used
+    // Secret
     new Schema.GroupValidator('s', [
         new Schema.StringValidator('s', {
             minLength: 0,
@@ -107,7 +105,7 @@ const MESSAGE_BUNDLE_SCHEMA = new Schema([
         new Schema.NullValidator('s'),
         new Schema.UndefinedValidator('s')
     ]),
-    // Number of frames to expect in binary message?
+    // Frame Count
     new Schema.GroupValidator('f', [
         new Schema.NumberValidator('f', {
             minValue: 1,

@@ -4,7 +4,7 @@ const ToolSocketResponse = require('./ToolSocketResponse.js');
 const MessageBundle = require('./MessageBundle.js');
 
 const { generateUniqueId, addSearchParams, isBrowser, WebSocketWrapper } = require('./utilities.js');
-const { VALID_METHODS } = require('./constants.js');
+const { VALID_METHODS, MAX_MESSAGE_SIZE } = require('./constants.js');
 const { URL_SCHEMA, MESSAGE_BUNDLE_SCHEMA } = require('./schemas.js');
 
 /**
@@ -23,8 +23,8 @@ class ToolSocket {
         this.networkId = null;
         this.origin = null;
 
-        this.eventCallbacks = {}; // For internal events
-        this.responseCallbacks = {}; // For responses to messages
+        this.eventCallbacks = {}; // For events
+        this.responseCallbacks = {}; // For handling direct responses to sent messages
         /** @type {?BinaryBuffer} */
         this.binaryBuffer = null;
 
@@ -89,7 +89,7 @@ class ToolSocket {
         }
         this.origin = origin ? origin : (isBrowser ? 'web' : 'server'); // Unclear what the purpose of this default is
 
-        const searchParams = new URLSearchParams({networkID: this.networkId}); // TODO: make these names (networkID, networkId) equivalent
+        const searchParams = new URLSearchParams({networkID: this.networkId});
         this.url = addSearchParams(url, searchParams);
 
         this.socket = new WebSocketWrapper(this.url);
@@ -138,19 +138,43 @@ class ToolSocket {
      * Sets up event listeners for routes that ToolSocket handles itself
      */
     configureDefaultRoutes() {
-        this.addEventListener('ping', (_route, body, response, _binaryData) => {
+        // Send pong in response and trigger network update if appropriate
+        this.addEventListener('ping', (_route, body, response, _binaryData, messageBundle) => {
             response.send('pong');
+            if (!messageBundle) {
+                return;
+            }
+            if (messageBundle.message.network !== 'toolbox' && messageBundle.message.network !== this.networkId) {
+                this.triggerEvent('network', messageBundle.message.network, this.networkId, messageBundle.message);
+                this.networkId = messageBundle.message.network;
+            }
         });
+
+        // We're receiving an event, trigger it
         this.addEventListener('io', (route, body, _responseObject, binaryData) => {
             if (VALID_METHODS.includes(route)) {
                 console.warn(`Received IO message with route, ${route}, which cannot be distinguished from the request method with the same name. Please pick a different route.`);
             }
             this.triggerEvent(route, body, binaryData);
         });
+
+        // We're receiving a response to a message we sent earlier, trigger callbacks
+        this.addEventListener('res', (_route, _body, _response, _binaryData, messageBundle) => {
+            if (!messageBundle) {
+                return;
+            }
+            if (messageBundle.message.id) {
+                if (this.responseCallbacks[messageBundle.message.id]) {
+                    this.responseCallbacks[messageBundle.message.id](messageBundle.message.body, messageBundle.binaryData);
+                    delete this.responseCallbacks[messageBundle.message.id];
+                }
+            }
+        });
     }
 
     /**
-     * Adds event listeners to the WebSocket instance and sets the binaryType to arraybuffer
+     * Adds event listeners to the WebSocket instance and sets the binaryType to arraybuffer.
+     * arraybuffer is used because it is available in both Node.js and the browser.
      */
     configureSocket() {
         this.socket.binaryType = 'arraybuffer';
@@ -201,22 +225,22 @@ class ToolSocket {
      * @param {string | Uint8Array} message - The message to process
      */
     routeMessage(message) {
-        // TODO: add validation on inputs and error handling
         /** @type {MessageBundle} */
         let messageBundle = null;
-        let messageLength = 0; // TODO: name this something clearer once purpose is better understood
+        let messageLength = 0;
         if (typeof message === 'string') {
             try {
                 messageBundle = MessageBundle.fromString(message);
                 messageLength = message.length;
                 if (messageBundle.message.frameCount !== null) {
-                    // f is the number of binary messages to follow
+                    // frameCount is the number of binary messages to follow
                     // Set up this.binaryBuffer so that we can receive those messages
                     this.binaryBuffer = new BinaryBuffer(messageBundle.message.frameCount);
                     this.binaryBuffer.mainMessage = messageBundle.message;
                     return;
                 }
             } catch (_e) {
+                console.warn('failed to process stringified message, dropping', message);
                 this.triggerEvent('droppedMessage', message);
                 return;
             }
@@ -230,9 +254,10 @@ class ToolSocket {
             // We can now process the full buffer
             try {
                 messageBundle = MessageBundle.fromBinaryBuffer(this.binaryBuffer);
-                messageLength = message.length; // TODO: Ensure this actually works on message
+                messageLength = message.length;
                 this.binaryBuffer = null;
             } catch (_e) {
+                console.warn('failed to process full binary buffer, dropping', message);
                 this.triggerEvent('droppedMessage', message);
                 return;
             }
@@ -240,40 +265,27 @@ class ToolSocket {
             try {
                 // Single binary message, can process immediately
                 messageBundle = MessageBundle.fromBinary(message);
-                messageLength = message.length; // TODO: Ensure this actually works on message
+                messageLength = message.length;
             } catch (_e) {
+                console.warn('failed to process binary message, dropping', message);
                 this.triggerEvent('droppedMessage', message);
                 return;
             }
         }
 
-        // TODO: test for message length as well
         if (!MESSAGE_BUNDLE_SCHEMA.validate(messageBundle.message)) {
-            console.warn('message schema validation failed', messageBundle.message, MESSAGE_BUNDLE_SCHEMA.failedValidator);
+            console.warn('message schema validation failed, dropping', messageBundle.message, MESSAGE_BUNDLE_SCHEMA.failedValidator);
             this.triggerEvent('droppedMessage', message);
             return;
         }
 
-        if (messageBundle.message.method === 'ping') {
-            // TODO: move this to a ping event listener once event format is improved, need access to `n` there
-            // Update network ID on ping message
-            // 'toolbox' is the initial network ID for a connection from cloud-proxy to client used until first ping
-            // Should not override actual network ID
-            if (messageBundle.message.network !== 'toolbox' && messageBundle.message.network !== this.networkId) {
-                this.triggerEvent('network', messageBundle.message.network, this.networkId, messageBundle.message);
-                this.networkId = messageBundle.message.network;
-            }
-        }
-
-        // TODO: this if statement is kind of weird, mix of handling res route and validating i exists
-        if (messageBundle.message.id && messageBundle.message.method === 'res') {
-            if (this.responseCallbacks[messageBundle.message.id]) {
-                this.responseCallbacks[messageBundle.message.id](messageBundle.message.body, messageBundle.binaryData);
-                delete this.responseCallbacks[messageBundle.message.id];
-            }
+        if (messageLength > MAX_MESSAGE_SIZE) {
+            console.warn('message too large, dropping', messageBundle.message, messageLength);
+            this.triggerEvent('droppedMessage', message);
             return;
         }
 
+        // Trigger appropriate method handler
         if (VALID_METHODS.includes(messageBundle.message.method)) {
             // If the message was sent with an ID, we want to be able to send a response
             const responseObject = messageBundle.message.id ? new ToolSocketResponse(this, messageBundle.message) : null;
@@ -281,7 +293,9 @@ class ToolSocket {
                 messageBundle.message.route,
                 messageBundle.message.body,
                 responseObject,
-                messageBundle.binaryData);
+                messageBundle.binaryData,
+                messageBundle
+            );
         }
     }
 

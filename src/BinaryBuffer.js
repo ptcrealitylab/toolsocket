@@ -7,9 +7,8 @@ class BinaryBuffer {
      * @param {number} length - The length of the underlying buffer
      */
     constructor(length) {
-        // this.buffer = new Uint8Array(length);
         /** @type {?ToolSocketMessage} */
-        this.mainMessage = null; // Object that contains data about the whole message
+        this.mainMessage = null; // Contains the original message that asked for a BinaryBuffer to be created
         /** @type {Uint8Array[]} */
         this.messageBuffer = [];
         this.length = length;

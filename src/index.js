@@ -17,6 +17,7 @@ ToolSocket.Schema = Schema;
 if (isBrowser) {
     window.io = new ToolSocket();
 } else {
+    // Only expose Server within Node.js
     ToolSocket.Server = ToolSocketServer;
 }
 module.exports = ToolSocket;
