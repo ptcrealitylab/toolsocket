@@ -1,234 +1,143 @@
-## ToolSocket
+# ToolSocket
 
-#### Building for Browser
+## Setup
+
+### Installing for Production (Node.js)
+Run `npm i toolsocket` in your project directory.
+
+### Installing for Development (Node.js)
+Run `npm link` in your `toolsocket` repository, then `npm link toolsocket` in your projects
+that use `toolsocket`. They should now be linked to your local `toolsocket` repository.
+
+### Building ToolSocket (Web)
 Run `npm run build`, then copy `dist/toolsocket.js` to your server and load it in a script tag.
+The build script automatically minifies `dist/toolsocket.js` for you.
 
-#### For socket.io API compatibility scroll down!
-ToolSocket is a WebSocket server (nodejs only) and client for nodejs and browsers and a minimal but strict JSON Schema validator. The goal is to simplify real-time data communication.
+## Usage
 
-+ It supports Req/Res, messages without acknowledgment, and in future Pub/Sub all via a single Websocket.
-+ The API for browser and nodejs is identical.
-+ Build-in data package validator uses JSON schema.
-+ The minified library file size is only 7 kb.
-+ The communication protocol is standard conform WebSocket with a JSON based message package:
-
-````javascript
-// code snipets from line 51
-this.DataPackage = function (origin, network, method, route, body, id = null) {
-    this.i = id; // Package id for response otherwise null
-    this.o = origin; // Package origin [client, web, server]
-    this.n = network; // NetworkID (think about it as room)
-    this.m = method; // Method such as post, get, action, ...
-    this.r = route; // Package route. Example "/boston/seaport/ptc"
-    this.b = body; // Message body (object, array, number, string)
-    this.s = null // (optional) Secret used to manage write access.
-    this.f = null // (optional) amount of binary buffers in array attached to a message
-};
-````
-
-### install
-add the following to your package.json
-```json
-"dependencies":{
-  "toolsocket": "ptcrealitylab/toolsocket#main"
-}
-  ```
-`npm install`
-
-### Initialize Server
+### Server
 ```javascript
 const ToolSocket = require('toolsocket');
-let serverPort= 12345;
-let webSocketServer = new ToolSocket.Server({port: serverPort, origin: 'proxy'});
+const webSocketServer = new ToolSocket.Server({/* WS server options go here */});
 
 webSocketServer.on('connection', function connection(socket) {
-  // place your socket code here
-});
-```
+    // Method-style request handling
+    socket.on('post', (route, body, res, binaryData) => {
+        if(route === "/") {
+            console.log(body) // "hello"
+            if (res) { // res object is available only if sender registered a callback
+                if (binaryData) {
+                    res.send('hi', binaryData); // res.send can optionally send binaryData (Uint8Array) as well
+                } else {
+                    res.send('hi');
+                }
+            }
+        }
+    });
 
-### Initialize Server with HTTP
-```javascript
-let webSocketServer = new ToolSocket.Server({Server: http});
-```
-
-### Initialize Client in Nodejs
-
-```javascript
-const ToolSocket = require("toolsocket");
-let socket = new ToolSocket('ws://localhost:12345', 'networkID', 'client');
-```
-
-### Initialize Client in Web-Browser
-
-```html
-<script src="node_modules/toolsocket/index.js"></script>
-<script>
-    let socket = new ToolSocket('ws://localhost:12345', 'networkID', 'web');
-</script>
-```
-
-Network ID is like a Room that allows you to group messages by a specific Network.
-
-### Send a Message via the Socket
-#### with req/res style callback
-```javascript
-// with req/res call back
-let route = "/"; let msg = "hello"; let binaryData = {data: new TextEncoder().encode("binary")};
-socket.post(route, msg, function (msg) {
-        console.log(msg); // "hi"
-    }, 
-    binaryData // (optional) A single binary buffer or multiple binary buffers in an array.
-);
-```
-#### message without acknowledgment 
-```javascript
-let route = "/"; let msg = "hello"; let binaryData = {data: new TextEncoder().encode("binary")};
-socket.post(route, msg, null, binaryData); // (optional) binaryData: A single binary buffer or multiple binary buffers in an array.
-```
-
-### Receive a Message via the Socket
-#### with req/res style callback
-```javascript
-socket.on('post', function (route, msg, res, binary) {
-    if(route === "/") {
-        console.log(msg) // "hello"
-        if(binary.data) 
-            res.send('hi', binary); // (optional) binary: A single binary buffer or multiple binary buffers in an array.
-        else
-            res.send('hi'); 
-    }
-}) 
-``` 
-#### message without acknowledgment
-```javascript
-socket.on('post', function (route, msg, res, binary) {
-    if(route === "/")
-    console.log(msg) // "hello"
-}) 
-``` 
-
-Every ``post`` can be replaced with `"beat", "action", "get", "post", "put", "patch", "delete", "new", "message"`
-
-### Other Socket Events:
-
-```javascript
-socket.on('network', function incoming(newNet, oldNet) {
-    console.log(newNet, oldNet) // new networkID, old networkID
-});
-
-socket.on('close', function connection() {
-    console.log('CONNECTION LOST'); // 'CONNECTION LOST'
-})
-
-socket.on('open', function open() {
-    // Place your socket event code here to call it at the right moment.
-});
-
-socket.on("status", function(status){
-    if(status === socket.OPEN){
-        // test for socket open
-    } else if(status === socket.OPEN){
-        // test for socket closed
-    }
-})
-
-socket.on('error', function open(e) {
-    console.log(e); // output error message
-});
-
-socket.on('connected', function open() {});
-
-```
-## socket.io Compatibility
-ToolSocket.io is a socket.io API compatible server (nodejs only) and client for nodejs and browsers.
-
-
-### install
-add the following to your package.json
-```json
-"dependencies":{
-  "toolsocket": "ptcrealitylab/toolsocket#main"
-}
-  ```
-`npm install`
-
-### Initialize Server
-```javascript
-const ToolSocket = require('toolsocket');
-let serverPort= 12345;
-let ioServer = new ToolSocket.Io.Server({port: 12443});
-
-ioServer.on('connection', function connection(socket) {
-  // place your socket code here
-});
-```
-### Initialize Server with HTTP
-```javascript
-let ioServer = new ToolSocket.Io.Server({Server: http});
-ioServer.on('connection', (socket) => {
-    //socket code here
-});
-```
-
-### Initialize Client in Nodejs
-```javascript
-const ToolSocket = require('toolsocket');
-let io = new ToolSocket.Io();
-let socket = io.connect("ws://localhost:12443/n/networkName");
-```
-
-### Initialize Client in Web-Browser
-```html
-<script src="node_modules/toolsocket/index.js"></script>
-<script>
-    let socket = io.connect("ws://localhost:12443/n/networkName");
-</script>
-```
-Connecting to origin server works without any arguments:
-```html
-<script src="node_modules/toolsocket/index.js"></script>
-<script>
-    let socket = io.connect();
-</script>
-```
-
-### Send a Message via the Socket
-#### with req/res style callback
-```javascript
-// with req/res call back
-let title = "/";
-let msg = "hello"; 
-let binaryData = {data: new TextEncoder().encode("binary")};
-
-socket.emit(title, msg,binaryData); // (optional) binary: A single binary buffer or multiple binary buffers in an array.
-```
-
-### Receive a Message via the Socket
-#### with req/res style callback
-```javascript
-let title = "/";
-socket.on(title , function (msg, binary) {
-        if(binary.data) 
-            console.log('hi', binary); // (optional) binary: A single binary buffer or multiple binary buffers in an array.
-        else
+    // Event-style request handling (Cannot send responses)
+    socket.on('/', (body, binary) => {
+        console.log(body) // "hello"
+        if (binaryData) {
+            console.log('hi', binaryData);
+        } else {
             console.log('hi');
-}) 
+        }
+    });
+});
 ```
-### Setter
+
+### Client
+In your html file:
+```html
+<script src="dist/toolsocket.js"></script>
+```
+
+In your js code:
+```javascript
+const socket = new ToolSocket('ws://localhost:12345', 'networkID', 'client');
+
+const route = "/";
+const body = "hello";
+const binaryData = new TextEncoder().encode("binary");
+
+// Method-style request without acknowledgement
+socket.post(route, body, null, binaryData);
+
+// Method-style request with callback
+socket.post(route, body, (responseMsg, _responseBinary) => {
+    console.log(responseMsg); // "hi"
+}, binaryData); // binaryData is optional and must be a Uint8Array
+
+// Event-style request (cannot be used with callbacks)
+socket.emit(route, body, binaryData);
+```
+
+### Additional Socket Events:
 
 ```javascript
-socket.close();
+// On network ID change, such as when connecting to an existing network
+socket.on('network', (newNet, oldNet) => {
+    console.log(newNet, oldNet);
+});
+
+// On WebSocket message received (raw string)
+socket.on('rawMessage', (rawMessage) => {});
+
+// On WebSocket message dropped (could not be processed into a ToolSocketMessage)
+socket.on('droppedMessage', (droppedMessage) => {});
+
+// On WebSocket message sent (raw string)
+socket.on('rawSend', (rawSentMessage) => {});
+
+// On ToolSocket message sent (see ToolSocketMessage)
+socket.on('send', (sentMessage) => {});
+
+// On connection open
+socket.on('open', () => {
+    console.log('CONNECTION OPEN');
+});
+
+// On connection close
+socket.on('close', () => {
+    console.log('CONNECTION CLOSED');
+});
+
+// Subscribe to underlying WebSocket connection events directly
+socket.on('status', (status) => {
+    if(status === socket.CONNECTING){
+        console.log('CONNECTION CONNECTING');
+    } else if (status === socket.OPEN){
+        console.log('CONNECTION OPEN');
+    } else if (status === socket.CLOSING){
+        console.log('CONNECTION CLOSING');
+    } else if (status === socket.CLOSED){
+        console.log('CONNECTION CLOSED');
+    }
+})
+
+// On WebSocket error
+socket.on('error', (error) => {
+    console.error(error); // output error message
+});
+
+// Same as 'open'
+socket.on('connected', () => {});
 ```
-### Getters
-Get if the socked is connected
-```javascript
-socket.connected();
+
+## Underlying Message Format
+ToolSocket's underlying WebSocket messages use the shorthand single-letter keys seen below, but ToolSocket exposes
+clearly named getters and setters for ease of use. See `src/ToolSocketMessage.js` for more details.
+
 ```
-Each socket on the **server** has an id:
-```javascript
-socket.id
-```
-And the server has an object that stores all sockets.
-```javascript
-ioServer.sockets[socket.id]
+{
+  o/origin: (e.g. client, web, server),
+  n/network: (can be thought of as a socket.io room),
+  m/method: (e.g. get, post, delete),
+  r/route: (e.g. /about, /home),
+  b/body: (an arbitrary JS object to be stringified),
+  i/id: (an ID for listening for responses),
+  s/secret: (used to manage write access),
+  f/frameCount: (number of binary buffers that will be sent following this message)
+}
 ```
