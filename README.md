@@ -13,6 +13,11 @@ that use `toolsocket`. They should now be linked to your local `toolsocket` repo
 Run `npm run build`, then copy `dist/toolsocket.js` to your server and load it in a script tag.
 The build script automatically minifies `dist/toolsocket.js` for you.
 
+### Testing
+Run the included jest test suite via `npm run test`.
+
+Run tests with coverage analysis via `npm run coverage`.
+
 ## Usage
 
 ### Server
