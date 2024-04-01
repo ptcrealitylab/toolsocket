@@ -34,6 +34,9 @@ class ToolSocketResponse {
             body = 204;
         }
         const message = new ToolSocketMessage(this.toolSocket.origin, this.originalMessage.network, 'res', this.originalMessage.route, body, this.originalMessage.id);
+        if (this.originalMessage.secret) {
+            message.secret = this.originalMessage.secret;
+        }
         const messageBundle = new MessageBundle(message, binaryData);
         this.toolSocket.send(messageBundle, null);
     }
