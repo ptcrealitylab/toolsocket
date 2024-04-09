@@ -28,8 +28,8 @@ const webSocketServer = new ToolSocket.Server({/* WS server options go here */})
 webSocketServer.on('connection', function connection(socket) {
     // Method-style request handling
     socket.on('post', (route, body, res, binaryData) => {
-        if(route === "/") {
-            console.log(body) // "hello"
+        if (route === "/") {
+            console.log(body); // "hello"
             if (res) { // res object is available only if sender registered a callback
                 if (binaryData) {
                     res.send('hi', binaryData); // res.send can optionally send binaryData (Uint8Array) as well
@@ -42,7 +42,7 @@ webSocketServer.on('connection', function connection(socket) {
 
     // Event-style request handling (Cannot send responses)
     socket.on('/', (body, binary) => {
-        console.log(body) // "hello"
+        console.log(body); // "hello"
         if (binaryData) {
             console.log('hi', binaryData);
         } else {
@@ -110,7 +110,7 @@ socket.on('close', () => {
 
 // Subscribe to underlying WebSocket connection events directly
 socket.on('status', (status) => {
-    if(status === socket.CONNECTING){
+    if (status === socket.CONNECTING) {
         console.log('CONNECTION CONNECTING');
     } else if (status === socket.OPEN){
         console.log('CONNECTION OPEN');
