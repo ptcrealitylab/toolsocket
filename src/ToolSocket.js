@@ -63,7 +63,7 @@ class ToolSocket {
     }
 
     get connected() {
-        return this.socket.readyState === this.socket.OPEN;
+        return this.socket && this.socket.readyState === this.socket.OPEN;
     }
 
     /**
