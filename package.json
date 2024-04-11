@@ -1,10 +1,12 @@
 {
   "name": "toolsocket",
-  "version": "1.0.0",
-  "description": "A websocket server for nodejs and client for nodejs and browser. Supports Req/Res, Send without response and in future pub/sub.",
-  "main": "index.js",
+  "version": "2.0.0",
+  "description": "A communication layer built on top of WebSocket for Node.js and browsers.",
+  "main": "src/index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "coverage": "jest --coverage",
+    "build": "esbuild src/index.js --bundle --minify --outfile=dist/toolsocket.js --format=iife --global-name=ToolSocket --external:ws"
   },
   "repository": {
     "type": "git",
@@ -18,19 +20,23 @@
     "node"
   ],
   "author": "Valentin Heun",
+  "contributors": [
+    "Daniel Dangond <ddangond@ptc.com>"
+  ],
   "license": "MPL-2.0",
   "bugs": {
     "url": "https://github.com/ptcrealitylab/toolsocket/issues"
   },
   "homepage": "https://github.com/ptcrealitylab/toolsocket#readme",
   "dependencies": {
-    "ip": "^1.1.5",
     "ws": "^8.2.3"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.16.5",
     "@babel/preset-env": "^7.16.11",
+    "esbuild": "^0.20.2",
     "eslint": "^8.8.0",
-    "jest": "^27.2.5"
+    "jest": "^27.2.5",
+    "regenerator-runtime": "^0.14.1"
   }
 }
