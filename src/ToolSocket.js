@@ -92,7 +92,9 @@ class ToolSocket {
         const searchParams = new URLSearchParams({networkID: this.networkId});
         this.url = addSearchParams(url, searchParams);
 
-        this.socket = new WebSocketWrapper(this.url);
+        this.socket = new WebSocketWrapper(this.url, [], {
+            maxPayload: MAX_MESSAGE_SIZE,
+        });
         this.configureSocket();
     }
 
