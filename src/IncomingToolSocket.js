@@ -19,8 +19,8 @@ class IncomingToolSocket extends ToolSocket {
      * Requests the source to create another ToolSocket connection for parallel data transfer.
      * @return {Promise<ToolSocket>} - The parallel socket we just created.
      */
-    async requestParallelSocket() {
-        return await this.server.requestParallelSocket(this);
+    requestParallelSocket() {
+        return this.server.requestParallelSocket(this);
     }
 }
 

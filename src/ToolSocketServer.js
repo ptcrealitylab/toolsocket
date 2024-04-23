@@ -1,5 +1,3 @@
-const ToolSocket = require('./ToolSocket.js');
-
 const { WebSocketWrapper } = require('./utilities.js');
 const { URL_SCHEMA, MESSAGE_BUNDLE_SCHEMA } = require('./schemas.js');
 const IncomingToolSocket = require('./IncomingToolSocket');
