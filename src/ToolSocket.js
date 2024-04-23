@@ -152,10 +152,20 @@ class ToolSocket {
             }
         });
 
+        this.addEventListener('meta', (route, body, _response, _binaryData, _messageBundle) => {
+            if (route === 'requestParallel') {
+                this.triggerEvent('requestParallel', body); // body = id
+            } else if (route === 'confirmParallel') {
+                this.triggerEvent('confirmParallel', body); // body = id
+            } else {
+                console.warn(`Received unknown meta route: "${route}"`);
+            }
+        });
+
         // We're receiving an event, trigger it
         this.addEventListener('io', (route, body, _responseObject, binaryData) => {
             if (VALID_METHODS.includes(route)) {
-                console.warn(`Received IO message with route, ${route}, which cannot be distinguished from the request method with the same name. Please pick a different route.`);
+                console.warn(`Received IO message with route: "${route}", which cannot be distinguished from the request method with the same name. Please pick a different route.`);
             }
             this.triggerEvent(route, body, binaryData);
         });
@@ -558,6 +568,17 @@ class ToolSocket {
     }
 
     /**
+     * Sends a META message, used for ToolSocket internal messages (i.e. requestParallel)
+     * @param {string} route - The route
+     * @param {any} body - The message body
+     * @param {function} [callback] - A callback function that is called if a response is required
+     * @param {object} [binaryData] - Binary data
+     */
+    meta(route, body, callback, binaryData) {
+        this.sendMethod('meta', route, body, callback, binaryData);
+    }
+
+    /**
      * Adds aliases for backwards compatibility
      */
     configureAliases() {
@@ -569,6 +590,15 @@ class ToolSocket {
         this.CONNECTING = WebSocketWrapper.CONNECTING;
         this.CLOSING = WebSocketWrapper.CLOSING;
         this.CLOSED = WebSocketWrapper.CLOSED;
+    }
+
+    /**
+     * Clones a ToolSocket, creating a parallel connection to the same endpoint.
+     * @param {ToolSocket} toolsocket - The source ToolSocket.
+     * @returns {ToolSocket} - A new ToolSocket created to the same endpoint as the original.
+     */
+    static makeParallelSocket(toolsocket) {
+        return new ToolSocket(toolsocket.url, toolsocket.networkId, 'parallel');
     }
 }
 

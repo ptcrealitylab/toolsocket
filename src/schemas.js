@@ -59,7 +59,7 @@ const MESSAGE_BUNDLE_SCHEMA = new Schema([
     ]),
     // Origin
     new Schema.StringValidator('o', {
-        enum: ['server', 'client', 'web', 'edge', 'proxy'],
+        enum: ['server', 'client', 'web', 'edge', 'proxy', 'parallel'],
         required: true
     }),
     // Network
