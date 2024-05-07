@@ -101,13 +101,47 @@ class ToolSocketServer {
      */
     requestParallelSocket(toolSocket) {
         const id = generateUniqueId(8);
-        toolSocket.meta('requestParallel', id, null, null);
-        let resolve;
-        const promise = new Promise((res) => {
-            resolve = res;
-        });
-        this.pendingParallelRequests.set(id, resolve);
-        return promise;
+        const requestTimeout = 5 * 1000;
+        if (toolSocket.supportsParallelSocket === undefined) {
+            // We don't know if the socket supports this feature due to backwards-compatibility requirements
+            toolSocket.meta('requestParallel', id, null, null);
+            let promiseResolved = false;
+            let resolve, reject;
+            const promise = new Promise((res, rej) => {
+                resolve = res;
+                reject = rej;
+            }).then(parallelSocket => {
+                toolSocket.supportsParallelSocket = true;
+                promiseResolved = true;
+                return parallelSocket;
+            });
+            this.pendingParallelRequests.set(id, resolve);
+            setTimeout(() => {
+                if (promiseResolved) {
+                    return; // Do nothing if already resolved
+                }
+                this.pendingParallelRequests.delete(id);
+                if (toolSocket.supportsParallelSocket === undefined) {
+                    toolSocket.supportsParallelSocket = false;
+                    reject('Unable to create parallel socket connection. Might not be supported by client.');
+                } else {
+                    reject('Unable to create parallel socket connection. Client does support it, but there\'s likely a network issue.'); // If it's succeeded at least once before, we don't need to set it to false, might just be a network issue
+                }
+            }, requestTimeout);
+            return promise;
+        } else if (toolSocket.supportsParallelSocket) {
+            // We know the socket supports this feature
+            toolSocket.meta('requestParallel', id, null, null);
+            let resolve;
+            const promise = new Promise((res) => {
+                resolve = res;
+            });
+            this.pendingParallelRequests.set(id, resolve);
+            return promise;
+        } else {
+            // The socket does not support this feature
+            return Promise.reject('Unable to create parallel socket connection. Might not be supported by client.');
+        }
     }
 
     close() {
