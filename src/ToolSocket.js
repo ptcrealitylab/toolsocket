@@ -44,6 +44,7 @@ class ToolSocket {
         } else if (isBrowser) {
             url = new URL(window.location.href);
             url.protocol = url.protocol.replace('http', 'ws');
+            url.hash = '';
             this.connect(url, networkId, origin);
         }
 
